@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\annual_rates.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\atm_pres.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\baresoil_evap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bgc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\bgc_io.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\canopy_et.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\check_balance.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\daily_allocation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\daymet.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\dayphen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\decomp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\decomp_soil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\firstday.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FSM_core.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FSM_func1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FSM_func2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\get_co2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\get_ndep.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\growth_resp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\maint_resp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\make_zero_flux_struct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\mortality.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\nleaching.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\outflow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\output_ascii.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\output_map_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\phenology.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\photosynthesis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\prcp_route.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\precision_control.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\prephenology.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\radtrans.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\restart_io.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\smooth.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\snowmelt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\soilpsi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\state_update.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\summary.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\zero_srcsnk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\getopt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\re_initialized.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\make_zero_state_struct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
