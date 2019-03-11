@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BGCWorld", "BGCWorld\BGCWorld.vcxproj", "{D3510799-7504-4004-A51A-F56C24B8AB35}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibGBC", "LibGBC\LibGBC.vcxproj", "{585F40AA-C35F-4709-ADA7-08FA76BDF625}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibBGC", "LibBGC\LibBGC.vcxproj", "{585F40AA-C35F-4709-ADA7-08FA76BDF625}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

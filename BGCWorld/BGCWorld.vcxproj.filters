@@ -15,55 +15,55 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\co2_init.c">
+    <ClCompile Include="source\co2_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\end_init.c">
+    <ClCompile Include="source\end_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\epc_init.c">
+    <ClCompile Include="source\epc_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\ini.c">
+    <ClCompile Include="source\ini.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\met_init.c">
+    <ClCompile Include="source\metarr_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\metarr_init.c">
+    <ClCompile Include="source\met_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\ndep_init.c">
+    <ClCompile Include="source\ndep_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\output_ctrl.c">
+    <ClCompile Include="source\output_ctrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\output_init.c">
+    <ClCompile Include="source\output_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\pointbgc.c">
+    <ClCompile Include="source\pointbgc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\presim_state_init.c">
+    <ClCompile Include="source\presim_state_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\ramp_ndep_init.c">
+    <ClCompile Include="source\ramp_ndep_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\restart_init.c">
+    <ClCompile Include="source\restart_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\scc_init.c">
+    <ClCompile Include="source\scc_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\sitec_init.c">
+    <ClCompile Include="source\sitec_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\state_init.c">
+    <ClCompile Include="source\state_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\time_init.c">
+    <ClCompile Include="source\time_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

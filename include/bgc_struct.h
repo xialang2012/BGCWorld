@@ -952,6 +952,22 @@ typedef struct
 	int metyr;
 } restart_data_struct;
 
+/* add high time resolution data */
+typedef struct
+{
+	int YEAR, DAY, HRMIN;  //time year, day of year, minutes
+	double Rd;  //(umol / m2 / s)
+	double GPP;	//(umol / m2 / s)
+	double NEE;	//(umol / m2 / s)
+	double TA;	//(deg C)
+	double PREC;  //(mm)
+	double RH;	//(%)
+	double VPD;	//(kPa)
+	double SWC;	//(%)
+	double PAR;	//(umol / m2 / s)
+	double ppfd;
+} stationFlux_data_struct;
+
 #ifdef __cplusplus
 }
 #endif

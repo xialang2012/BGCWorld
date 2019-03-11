@@ -10,6 +10,7 @@ See copyright.txt for Copyright information
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 */
 #include "bgc.h"
+#include "climateLoader.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -63,8 +64,32 @@ epvar_struct* epv);
 int canopy_et(const metvar_struct* metv, const epconst_struct* epc, 
 epvar_struct* epv, wflux_struct* wf, int verbose);
 int penmon(const pmet_struct* in, int out_flag,	double* et);
-int photosynthesis(psn_struct* psn);
+int photosynthesis(psn_struct* psn, const metvar_struct* metv);
 int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade);
+
+// add fucntions for the simulation of high time resolution
+void replacePhotosynthesisResults(epvar_struct*epv, cflux_struct*cf, psn_struct*psn_sun, psn_struct*psn_shade,
+	const epvar_struct* epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT);
+
+int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
+	double ppfdT, double* totalA, int *totalNum);
+int photosynthesisTimeRes(std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+	const cstate_struct* cs, const double albedo, psn_struct *psn, 
+	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
+int total_photosynthesisTimeRes(std::vector<StationDataFlux*> & sfData, const cstate_struct* cs, const double albedo,
+	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
+	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
+double simulationPar(const double inPar, const double timePer);
+double simulationPar1(const double inPar);
+double calppfdT(const cstate_struct* cs, const epconst_struct* epc,
+	metvar_struct* metv, epvar_struct* epv, double albedo, const int sunorshade);
+
+// read station of flux data
+int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
+void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
+
+// end 
+
 int outflow(const siteconst_struct* sitec, const wstate_struct* ws, wflux_struct* wf);
 int decomp(wstate_struct* ws, double tsoil, const epconst_struct* epc, epvar_struct* epv, 
 const siteconst_struct* sitec, cstate_struct* cs, cflux_struct* cf,
