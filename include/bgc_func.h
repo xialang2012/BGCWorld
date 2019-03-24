@@ -68,25 +68,29 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv);
 int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade);
 
 // add fucntions for the simulation of high time resolution
-void replacePhotosynthesisResults(epvar_struct*epv, cflux_struct*cf, psn_struct*psn_sun, psn_struct*psn_shade,
-	const epvar_struct* epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT);
+void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, epvar_struct*epv, cflux_struct*cf, psn_struct*psn_sun, psn_struct*psn_shade,
+	const epvar_struct* epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT, const int yearS, const int daysS);
 
-int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
-	double ppfdT, double* totalA, int *totalNum);
-int photosynthesisTimeRes(std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+//int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
+//	double ppfdT, double* totalA, int *totalNum);
+int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
 	const cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
-int total_photosynthesisTimeRes(std::vector<StationDataFlux*> & sfData, const cstate_struct* cs, const double albedo,
+int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, const cstate_struct* cs, const double albedo,
 	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
 	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
 double simulationPar(const double inPar, const double timePer);
 double simulationPar1(const double inPar);
 double calppfdT(const cstate_struct* cs, const epconst_struct* epc,
 	metvar_struct* metv, epvar_struct* epv, double albedo, const int sunorshade);
+double calGl(const metvar_struct* metv, const epconst_struct* epc,
+	epvar_struct* epv, wflux_struct* wf, const int mode, const int sunorshade);
 
 // read station of flux data
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
+
+char* analysisComm(const int argc, char **argv, high_time_resolution* high_time_resolution);
 
 // end 
 

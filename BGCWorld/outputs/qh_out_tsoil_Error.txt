@@ -1,18 +1,66 @@
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
+       123     0
     plotID  TsoilErr
+       123     0
     plotID  TsoilErr
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
     plotID  TsoilErr
-         1     0
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0
+    plotID  TsoilErr
+       123     0

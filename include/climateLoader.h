@@ -10,7 +10,7 @@ class climateLoaderBase
 {
 public:
 	climateLoaderBase(const std::string & s) : inFile(s), fileObj(nullptr) {};
-	virtual ~climateLoaderBase();
+	~climateLoaderBase();
 	//virtual void OpenData();
 
 	std::ifstream* fileObj;
@@ -34,7 +34,7 @@ class StationDataBase
 {
 public:
 	StationDataBase();
-	virtual ~StationDataBase();
+	~StationDataBase();
 
 	int year, month, day, hour, minute, days;   // time flag
 	int stationId;  // station id	
@@ -61,9 +61,9 @@ public:
 	double PREC;  //(mm)
 	double RH;	//(%)
 	double VPD;	//(kPa)
+	double Srad;  // (W/m2)
 	double SWC;	//(%)
 	double PAR;	//(umol / m2 / s)
-	double ppfd;
 
 private:
 	double calppfd();

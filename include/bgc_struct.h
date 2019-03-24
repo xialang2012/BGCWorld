@@ -11,6 +11,9 @@ See copyright.txt for Copyright information
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 */
 
+#include <iostream>
+#include <fstream>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -967,6 +970,15 @@ typedef struct
 	double PAR;	//(umol / m2 / s)
 	double ppfd;
 } stationFlux_data_struct;
+
+typedef struct
+{
+	bool output_stress;
+	bool output_old_cpool;
+	bool active;
+	char * stationFile;
+	std::ofstream tmpHighFile;
+}high_time_resolution;
 
 #ifdef __cplusplus
 }

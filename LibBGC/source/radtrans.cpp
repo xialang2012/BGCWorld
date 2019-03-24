@@ -40,7 +40,7 @@ metvar_struct* metv, epvar_struct* epv, double albedo)
 	2nd	Edition. Cambridge University Press. pp. 30-38.) These conversions
 	are approximated from the information given in Jones.
 	*/
-	
+	//std::cout << cs->leafc <<std::endl;
 	if (cs->leafc > 0.0)
 	{
 		/* Calculate whole-canopy projected and all-sided LAI */

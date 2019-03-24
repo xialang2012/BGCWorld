@@ -21,8 +21,6 @@ Revisions since 4.1.2
 
 /* These DEBUG defines are now depricated. Please use 
    bgc_printf(BV_DIAG,...) instead. The only place where 
-	 a DEBUG define is still used is inside bgc_printf(). */
-
 /* #define DEBUG */
 /* #define DEBUG_SPINUP set this to see the spinup details on-screen */
 
@@ -33,7 +31,9 @@ signed char summary_sanity = INSANE ;
 int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 {
 	// read high time resolution station data
-
+	bgcin->hModel.tmpHighFile.open("psnA_t.csv");
+	bgcin->hModel.tmpHighFile << "year, " << "daya, " << "temperature, " << "temperatureT, " << "psnsun_to_cpool, " <<
+		"psnsun_to_cpool_T, " << "psnshade_to_cpool, " << "psnshade_to_cpool_T, " << "limited, " << "carbon limited Per" << std::endl;
 
 	extern signed char summary_sanity;
 	/* variable declarations */
@@ -131,7 +131,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	soilvar_struct soil_sum[N];	/* add */
 	FILE *fp1;						/* add */
 	double tsoil,tsoil_sum,epv_psi,epv_psi_sum;/* add */
-	char pointID[50],soilT_path[100]=".\\outputs\\soilT_";
+	char pointID[50],soilT_path[100]="./bgc-data/outputs/soilT_";
 	int phenology_lastday=0;
 
 	_itoa(bgcin->sitec.pointcounter,pointID,10);	
@@ -391,8 +391,10 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 
 	// read high time resolution data to sfData
 	std::vector<StationDataFlux*> sfData;
-	char fluxStationDataFile[255]  = "C:/Users/DF/Desktop/AMF_CATP3_2015.csv";
-	readStationFluxData(sfData, fluxStationDataFile, tmpyears);
+	if (bgcin->hModel.active)
+	{
+		if (!readStationFluxData(sfData, bgcin->hModel.stationFile, tmpyears)) return 1;
+	}
 
 	/* do loop for spinup. will only execute once for MODE_MODEL */
 	do
@@ -597,7 +599,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			
 			/* set the day index for meteorological and phenological arrays */
 			metday = metyr*365 + yday;
-			//printf("metday=%lf\n",metday);
+
 			/* zero all the daily flux variables */
 			wf = zero_wf;
 			cf = zero_cf;
@@ -609,13 +611,10 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 				bgc_printf(BV_ERROR, "Error in daymet() from bgc()\n");
 				ok=0;
 			}
-		//	printf("tmax= %lf,tmin=%lf,tavg=%lf,prcp=%lf, vpd=%lf, rad=%lf, dayl=%lf,ws=%lf,lrad=%lf \n"
-		//				,metarr.tmax[metday],metarr.tmin[metday],metarr.tavg[metday],metarr.prcp[metday],metarr.vpd[metday],metarr.swavgfd[metday],metarr.dayl[metday],metarr.wspeed[metday],metarr.lrad[metday]);
 		
 			bgc_printf(BV_DIAG, "%d\t%d\tdone daymet\n",simyr,yday);
 	
-			/* soil temperature correction using difference from
-			annual average tair */
+			/* soil temperature correction using difference from annual average tair */
 			tdiff = tair_avg - metv.tsoil;
 			if (ws.snoww)
 			{
@@ -783,6 +782,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			/* do canopy ET calculations whenever there is leaf area
 			displayed, since there may be intercepted water on the 
 			canopy that needs to be dealt with */
+			wflux_struct wfT = wf;
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
@@ -803,8 +803,6 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			// add for high time resolution, 30 minutes
 			epvar_struct epvT = epv;
 			cflux_struct cfT = cf;
-			psn_struct psn_sunT = psn_sun;
-			psn_struct psn_shadeT = psn_shade;
 			//end
 
 			if (ok && cs.leafc && phen.remdays_curgrowth && metv.dayl)
@@ -821,9 +819,24 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 				epv.assim_sun = epv.assim_shade = 0.0;
 			}
 
+			// add for high time resolution, 30 minutes
+			psn_struct psn_sunT = psn_sun;
+			psn_struct psn_shadeT = psn_shade;
 			// add for high time resolution
-			total_photosynthesisTimeRes(sfData, &cs, sitec.sw_alb, &metv, &epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
-			replacePhotosynthesisResults(&epv, &cf, &psn_sun, &psn_shade, &epvT, &cfT, &psn_sunT, &psn_shadeT);
+			if (bgcin->hModel.active && mode == MODE_MODEL && cs.leafc && phen.remdays_curgrowth && metv.dayl)
+			{
+				total_photosynthesisTimeRes(&bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
+					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+			}
+
+			/*if (yday == 200)
+			{
+				std::cout << std::endl;
+			}*/
+			if(phen.remdays_curgrowth && metv.dayl)
+				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade, 
+				&epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+			//end
 
 			if (mode == MODE_MODEL)
 			{
@@ -1592,8 +1605,11 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 				}//在随机的某一天开始转化
 			}
 
-		}   /* end of daily model loop */
+		}   
+		/* end of daily model loop */
 		
+
+
 		/* ANNUAL OUTPUT HANDLING */
 		/* only write annual outputs if requested */
 		if (ok && ctrl.doannual)
@@ -1776,7 +1792,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 		fclose(fp1);
 */
 
-
+	bgcin->hModel.tmpHighFile.close();
 	/* return error status */	
 	return (!ok);
 }

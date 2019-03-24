@@ -65,7 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\getopt.h" />
-    <ClInclude Include="climateLoader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -16,6 +16,7 @@ extern "C"
 {
 #endif
 
+
 /* structure for passing input parameters to bgc() */
 typedef struct
 {
@@ -33,6 +34,7 @@ typedef struct
 	epconst_struct epc;     /* ecophysiological constants */
 	//int climate_id;/*用于读取气象资料的id*/
 	soilpar_struct vspar; /*冻土模块土壤性质，e.g 质地，导热率等*/
+	high_time_resolution hModel;
 } bgcin_struct;
 
 /* structure for output handling from bgc() */

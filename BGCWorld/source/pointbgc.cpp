@@ -47,13 +47,13 @@ int main(int argc, char *argv[])
 	/*site condition initialization parameters. 10,2010*/
 	file sitefile;
 	file epctypefile;
-	char spathname[100]=".\\site\\";//"m:\\bgc\\biomebgc4.2m\\site\\";//"f:\\biomebgc4.2_restart\\site\\";
+	char spathname[100]=".\\site\\";
 	char site[100];
 	
 
 	/*epc initialization parameters. 10,2010*/
 	file epcfile;
-	char epathname[100]=".\\epc\\";//"m:\\bgc\\biomebgc4.2m\\epc\\";//"f:\\biomebgc4.2_restart\\epc\\";
+	char epathname[100]=".\\epc\\";
 	int epc_check=1;
 	char epc[100];
 	//int intepc=0;
@@ -110,6 +110,25 @@ int main(int argc, char *argv[])
 
 	/* Process command line arguments */
 	opterr = 0;
+	char* inStationFile = analysisComm(argc, argv, &bgcin.hModel);
+	if (inStationFile != nullptr)
+	{
+		if (strcmp(inStationFile, "wrong") == 0)
+		{
+			std::cout << "please provide the high resoltion station file;" << std::endl;
+			return 1;
+		}
+		else
+		{
+			bgcin.hModel.active = true;
+			bgcin.hModel.stationFile = inStationFile;
+		}
+	}
+	else
+	{
+		bgcin.hModel.active = false;
+	}
+
 	while((c = getopt(argc, argv, (char*)"pVsl:v:ugmn:a")) != -1)
 	{
 		switch(c)
@@ -136,7 +155,6 @@ int main(int argc, char *argv[])
 				break;
 			case 'm':
 				cli_mode = MODE_MODEL;
-				//
 				strcpy(ndep_file.name,"co2\\ndep.txt");
 				//readndepfile = 0;
 				//bgcin.ndepctrl.varndep = 0;
@@ -153,7 +171,6 @@ int main(int argc, char *argv[])
 				readndepfile = 1;
 				bgcin.ndepctrl.varndep = 1;
 				break;
-				
 			case '?':
 				break;
 			default:
@@ -209,8 +226,9 @@ int main(int argc, char *argv[])
 
 	/*打开记录转换日期的文件*/
 	//fp_date=fopen(".\\地类转换日期1.txt","w");
+
 	/*begin the point loop*/
-	fp_site = fopen(".\\site\\site.csv","r");
+	fp_site = fopen(".\\site\\site.csv", "r");
 	while((fscanf(fp_site,"%[^,],%*[^\n]",junk1))!=EOF)
 		i++;
 	npoint = i-2;
@@ -225,7 +243,7 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 	_itoa(pointcounter, charcounter, 10);
 	if((pointcounter-1) % 100 == 0)
 		printf("第%d个点\n",pointcounter);
-	//printf("第%d个点\n",pointcounter);
+
 	if(pointcounter % 100 == 0)
 	{	
 		printf("*");		
@@ -254,11 +272,13 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 	memset(epc,0,100);
 	memset(charepc,0,100);
 	memset(restart.out_restart.name,0,128);
+
 	/*打开导度文件，开始写入
 	strcpy(gspathname,gspathname0);
 	strcat(gspathname,charcounter);
 	strcat(gspathname,".txt");
 	fp_write_gs=fopen(gspathname,"w");*/
+
 	/*read init file*/
 	if (optind >= argc)
 	{
@@ -266,15 +286,12 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 		exit(EXIT_FAILURE);
 	}
 	strcpy(init.name, argv[optind]);
-	//printf(init.name);
-	//printf("\n");
 	/* open the main init file for ascii read and check for errors */
 	if (file_open(&init,'i'))
 	{
 		bgc_printf(BV_ERROR, "Error opening init file, pointbgc.c\n");
 		exit(EXIT_FAILURE);
 	}
-	//printf("打开init文件\n");
 
 	/* read the header string from the init file */
 	if (fgets(point.header, 100, init.ptr)==NULL)
@@ -296,7 +313,6 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 		bgc_printf(BV_ERROR, "Error in call to restart_init() from pointbgc.c... Exiting\n");
 		exit(EXIT_FAILURE);
 	}
-	//printf("读取restart部分\n");
 
 	/* read simulation timing control parameters */
 	if (time_init(init, &(bgcin.ctrl)))
@@ -304,7 +320,6 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 		bgc_printf(BV_ERROR, "Error in call to epclist_init() from pointbgc.c... Exiting\n");
 		exit(EXIT_FAILURE);
 	}
-	//printf("实现time initialization\n");
 
 	/* read scalar climate change parameters */
 	if (scc_init(init, &scc))
@@ -312,7 +327,7 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 		bgc_printf(BV_ERROR, "Error in call to scc_init() from pointbgc.c... Exiting\n");
 		exit(EXIT_FAILURE);
 	}
-	//printf("读取sitec constants\n");
+
 	/* read CO2 control parameters */
 	if (co2_init(init, &(bgcin.co2), bgcin.ctrl.simyears))
 	{
@@ -328,16 +343,15 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 			exit(EXIT_FAILURE);
 		}
 	}
+
 	/* read site constants */
 	if (sitec_init(init, &bgcin.sitec))
 	{
 		bgc_printf(BV_ERROR, "Error in call to sitec_init() from pointbgc.c... Exiting\n");
 		exit(EXIT_FAILURE);
 	}
-	//printf("读取soil constants\n");
 
 	/*get the name and open site condition file, only open once when i=0*/
-	//if(pointcounter == 1)
 	if(pointcounter == 1)
 	{
 		if(mark_read)
@@ -658,8 +672,6 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 			{
 				bgc_printf(BV_ERROR, "Error in call to bgc()\n");
 				exit(EXIT_FAILURE);
-				//break;
-
 			}
 			bgc_printf(BV_PROGRESS, "SPINUP: residual trend  = %.6lf\n",bgcout.spinup_resid_trend);
 			bgc_printf(BV_PROGRESS, "SPINUP: number of years = %d\n",bgcout.spinup_years);
