@@ -26,6 +26,11 @@ int	optind = 1;
 int	optopt;
 char *optarg;
 
+#ifdef _WIN32 
+#define write _write
+#endif // DEBUG
+
+
 #define NULL	0
 #define EOF	(-1)
 #define ERR(s, c)	if(opterr){\

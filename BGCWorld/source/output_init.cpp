@@ -109,7 +109,7 @@ int output_init(output_struct* output,fileopen_struct *fileopen)
 				ok=0;
 			}
 			fileopen->month_pool_file = 0;
-			printf("monoutasciifile open\n");
+			//printf("monoutasciifile open\n");
 		}
 	}
 	if (ok && output->bgc_ascii && output->doannual)
@@ -126,7 +126,7 @@ int output_init(output_struct* output,fileopen_struct *fileopen)
 			fprintf(output->annoutascii.ptr,"%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s%13s\n","plotID","soilWater","soilSnow","LAI","vegC",
 					"litrC","soilC","totalC","leafC_sum","leafC_max","leafC","stemC","crootC","cwdc","FSM_soilw","FSM_icew","FSM_snoww");
 			fileopen->annual_pool_file = 0;
-			printf("annoutasciifile open\n");
+			//printf("annoutasciifile open\n");
 		}
 	}
 	
@@ -157,7 +157,7 @@ int output_init(output_struct* output,fileopen_struct *fileopen)
 				"plotID","year","PRCP","Tavg","max_LAI","ET","Trans","Evapor","CanopyW","OF","NPP","NBP","NEP","NEE","GPP","MR","GR","HR","root_MR","leaf_MR"
 				,"bgc土壤水","bgc雪","FSM土壤水","FSM冰","FSM雪","c价值");*/
 			fileopen->annual_flux_file = 0;
-			printf("annoutasciifile open\n");
+			//printf("annoutasciifile open\n");
 		}
 
 		strcpy(output->fp_tsoil_error.name,output->outprefix);
@@ -171,7 +171,7 @@ int output_init(output_struct* output,fileopen_struct *fileopen)
 			}
 			fprintf(output->fp_tsoil_error.ptr,"%10s%10s\n","plotID","TsoilErr");
 			fileopen->tsoil_error = 0;
-			printf("soil T error recorded file open\n");
+			//printf("soil T error recorded file open\n");
 		}
 		/* write the header info for simple text file 
 		fprintf(output->anntext.ptr,"Annual summary output from Biome-BGC version %s\n",VERS);

@@ -69,4 +69,5 @@ private:
 	double calppfd();
 };
 
+
 #endif // !CLIMATELOADER

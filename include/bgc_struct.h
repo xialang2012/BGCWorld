@@ -980,6 +980,14 @@ typedef struct
 	std::ofstream tmpHighFile;
 }high_time_resolution;
 
+typedef struct
+{
+	bool active;
+	char * laiFile;
+	std::ofstream laiFileSM;
+}
+lai_model;
+
 #ifdef __cplusplus
 }
 #endif

@@ -13,7 +13,7 @@ See copyright.txt for Copyright information
 #include "bgc.h"
 
 int radtrans(const cstate_struct* cs, const epconst_struct* epc, 
-metvar_struct* metv, epvar_struct* epv, double albedo)
+metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> &laiData, int metday)
 {
 	/* calculate the projected leaf area and SLA for sun and shade fractions
 	and the canopy transmission and absorption of shortwave radiation
@@ -45,6 +45,16 @@ metvar_struct* metv, epvar_struct* epv, double albedo)
 	{
 		/* Calculate whole-canopy projected and all-sided LAI */
 		epv->proj_lai = cs->leafc * epc->avg_proj_sla;
+		if (metday == 184)
+		{
+			std::cout << "" << std::endl;
+		}
+		// add lai as a change parameter
+		if (metday != -1 && laiData.size() != 0)
+		{
+			if (laiData[metday] != -1)
+				epv->proj_lai = laiData[metday];
+		}
 		epv->all_lai = epv->proj_lai * epc->lai_ratio;
 		
 		/* Calculate projected LAI for sunlit and shaded canopy portions */

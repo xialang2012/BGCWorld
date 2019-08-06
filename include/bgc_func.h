@@ -50,8 +50,8 @@ int leaf_litfall(const epconst_struct* epc, double litfallc,
 cflux_struct* cf, nflux_struct* nf);
 int froot_litfall(const epconst_struct* epc, double litfallc, 
 cflux_struct* cf, nflux_struct* nf);
-int radtrans(const cstate_struct* cs, const epconst_struct* epc, 
-metvar_struct* metv, epvar_struct* epv, double albedo);
+int radtrans(const cstate_struct* cs, const epconst_struct* epc,
+metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> &laiData =std::vector<float>(), int metday=-1);
 int prcp_route(const metvar_struct* metv, double precip_int_coef,
 double all_lai, wflux_struct* wf); 
 int snowmelt(const metvar_struct* metv, wflux_struct* wf, double snoww);
@@ -90,8 +90,9 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
-char* analysisComm(const int argc, char **argv, high_time_resolution* high_time_resolution);
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM);
 
+int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS=1);
 // end 
 
 int outflow(const siteconst_struct* sitec, const wstate_struct* ws, wflux_struct* wf);

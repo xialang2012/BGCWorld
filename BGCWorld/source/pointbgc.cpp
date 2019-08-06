@@ -10,6 +10,7 @@ See copyright.txt for Copyright information
 */
 
 #include "pointbgc.h"
+#include "bgc.h"
 
 #include "time.h"
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 	/*meteorology data initialization parameters. 10,2010*/
 	file metfile;
 	//char mpathname[100]="..\\..\\input";
-	char mpathname[100]="./metdata/input";
+	char mpathname[100]="./metdata/";
 	//char met[100] = "e:\\model\\@冻土BiomeBGC\\FSM-BGC\\input\\mohesitemetdata1997_2000(snow).txt";
 	char met[100];
 	/*site condition initialization parameters. 10,2010*/
@@ -110,8 +111,8 @@ int main(int argc, char *argv[])
 
 	/* Process command line arguments */
 	opterr = 0;
-	char* inStationFile = analysisComm(argc, argv, &bgcin.hModel);
-	if (inStationFile != nullptr)
+	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM);
+	/*if (inStationFile != nullptr)
 	{
 		if (strcmp(inStationFile, "wrong") == 0)
 		{
@@ -127,7 +128,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		bgcin.hModel.active = false;
-	}
+	}*/
 
 	while((c = getopt(argc, argv, (char*)"pVsl:v:ugmn:a")) != -1)
 	{
@@ -185,11 +186,11 @@ int main(int argc, char *argv[])
 
 	if (cli_mode != MODE_INI)
 	{
-		bgc_printf(BV_WARN, "Overridding ini mode. ");
+		//bgc_printf(BV_WARN, "Overridding ini mode. ");
 		if (cli_mode == MODE_SPINUP)
 			bgc_printf(BV_WARN, "Running in Spinup Mode.\n");
 		if (cli_mode == MODE_MODEL)
-			bgc_printf(BV_WARN, "Running in Model mode.\n");
+			//bgc_printf(BV_WARN, "Running in Model mode.\n");
 		if (cli_mode == MODE_SPINNGO)
 			bgc_printf(BV_WARN, "Running in Spin-and-Go mode.\nThe spinup and model will both be run.\n");
 	}
@@ -232,7 +233,7 @@ int main(int argc, char *argv[])
 	while((fscanf(fp_site,"%[^,],%*[^\n]",junk1))!=EOF)
 		i++;
 	npoint = i-2;
-	printf("npoint = %d\n",npoint);
+	//printf("npoint = %d\n",npoint);
 	fclose(fp_site);
 	N_begin = 1;
 
@@ -242,7 +243,7 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 	memset(charcounter,0,100);
 	_itoa(pointcounter, charcounter, 10);
 	if((pointcounter-1) % 100 == 0)
-		printf("第%d个点\n",pointcounter);
+		//printf("第%d个点\n",pointcounter);
 
 	if(pointcounter % 100 == 0)
 	{	
@@ -768,9 +769,7 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 			if (output.bgc_ascii && output.doannual) bgcout.annoutascii = output.annoutascii;
 			if (output.bgc_ascii && output.doannual) bgcout.anntext = output.anntext;
 			
-			/* initialize output files. Does nothing in spinup mode*/
-			
-			
+			/* initialize output files. Does nothing in spinup mode*/	
 			bgcin.ctrl.read_restart = 1;
 			bgcin.restart_input = bgcout.restart_output;
 			
@@ -841,27 +840,27 @@ for(pointcounter = N_begin; pointcounter<= npoint; pointcounter++)
 		if (output.bgc_ascii && output.doannual && (pointcounter == npoint))
 		{
 			fclose(output.annoutascii.ptr);//年ascii文件
-			printf("输出文件annual_pool关闭\n");
+			//printf("输出文件annual_pool关闭\n");
 		}
 		if (output.bgc_ascii && output.doannual && (pointcounter == npoint) && (fclose(output.anntext.ptr) != 0))
 		{
 			bgc_printf(BV_WARN, "Warning, error closing ascii annual output file: %s\n", strerror(errno));
-			printf("输出文件annual_flux关闭\n");
+			//printf("输出文件annual_flux关闭\n");
 		}
 		if (output.bgc_ascii && output.doannual && (pointcounter == npoint))
 		{
 			fclose(output.fp_tsoil_error.ptr);//年ascii文件
-			printf("输出文件annual_pool关闭\n");
+			//printf("输出文件annual_pool关闭\n");
 		}
 		if (output.bgc_ascii && output.dodaily && (pointcounter == npoint))
 		{
 			fclose(output.dayoutascii.ptr);//年ascii文件
-			printf("输出文件daily_pool关闭\n");
+			//printf("输出文件daily_pool关闭\n");
 		}
 		if (output.bgc_ascii && output.domonavg && (pointcounter == npoint))
 		{
 			fclose(output.monoutascii.ptr);//年ascii文件
-			printf("输出文件month_pool关闭\n");
+			//printf("输出文件month_pool关闭\n");
 		}
 	//	}
 

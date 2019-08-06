@@ -31,9 +31,18 @@ signed char summary_sanity = INSANE ;
 int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 {
 	// read high time resolution station data
-	bgcin->hModel.tmpHighFile.open("psnA_t.csv");
-	bgcin->hModel.tmpHighFile << "year, " << "daya, " << "temperature, " << "temperatureT, " << "psnsun_to_cpool, " <<
-		"psnsun_to_cpool_T, " << "psnshade_to_cpool, " << "psnshade_to_cpool_T, " << "limited, " << "carbon limited Per" << std::endl;
+	if (bgcin->hModel.active && mode == MODE_MODEL)
+	{
+		bgcin->hModel.tmpHighFile.open("./outputs/" + std::to_string( bgcin->sitec.climate_id ) + "_Psn_High.csv");
+		bgcin->hModel.tmpHighFile << "year, " << "daya, " << "temperature, " << "temperature_High, " << "psnsun_cpool, " <<
+			"psnsun_cpool_High, " << "psnshade_cpool, " << "psnshade_cpool_High, " << "carbon limited, " << "carbon limited Per" << std::endl;
+	}
+	else if(mode == MODE_MODEL)
+	{
+		bgcin->hModel.tmpHighFile.open("./outputs/" + std::to_string(bgcin->sitec.climate_id) + "_Psn.csv");
+		bgcin->hModel.tmpHighFile << "year, " << "daya, " << "temperature, " << "temperature_High(invalid), " << "psnsun_cpool, " <<
+			"psnsun_cpool_High(invalid), " << "psnshade_cpool, " << "psnshade_cpool_High(invalid), " << "carbon limited, " << "carbon limited Per(invalid)" << std::endl;
+	}
 
 	extern signed char summary_sanity;
 	/* variable declarations */
@@ -396,6 +405,13 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 		if (!readStationFluxData(sfData, bgcin->hModel.stationFile, tmpyears)) return 1;
 	}
 
+	// read lai data
+	std::vector<float> laiData;
+	if (bgcin->laiM.active)
+	{
+		if (!readLaiData(laiData, bgcin->laiM.laiFile, tmpyears)) return 1;
+	}
+
 	/* do loop for spinup. will only execute once for MODE_MODEL */
 	do
 	{
@@ -617,13 +633,9 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			/* soil temperature correction using difference from annual average tair */
 			tdiff = tair_avg - metv.tsoil;
 			if (ws.snoww)
-			{
 				metv.tsoil += 0.83 * tdiff;
-			}
 			else
-			{
 				metv.tsoil += 0.2 * tdiff;
-			}
 			
 			/* daily phenological variables from phenarrays */
 			if (ok && dayphen(&phenarr, &phen, metday))
@@ -684,12 +696,15 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			/* calculate leaf area index, sun and shade fractions, and specific
 			leaf area for sun and shade canopy fractions, then calculate
 			canopy radiation interception and transmission */
-			if (ok && radtrans(&cs, &epc, &metv, &epv, sitec.sw_alb))
+			if (ok && radtrans(&cs, &epc, &metv, &epv, sitec.sw_alb, laiData, metday))
 			{
 				bgc_printf(BV_ERROR, "Error in radtrans() from bgc()\n");
 				ok=0;
 			}
-			
+			if (metday == 184)
+			{
+				int  a = 0;
+			}
 			/* update the ann max LAI for annual diagnostic output */
 			if (epv.proj_lai > epv.ytd_maxplai) epv.ytd_maxplai = epv.proj_lai;
 			
@@ -829,11 +844,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
 			}
 
-			/*if (yday == 200)
-			{
-				std::cout << std::endl;
-			}*/
-			if(phen.remdays_curgrowth && metv.dayl)
+			if(cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)
 				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade, 
 				&epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
 			//end

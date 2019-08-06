@@ -324,7 +324,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnsun_to_cpool = (epv->assim_sun + epv->dlmr_area_sun) *
-		epv->plaisun * metv->dayl * 12.011e-9;
+		epv->plaisun * 24*60*60 * 12.011e-9;
 
 	/* SHADED canopy fraction photosynthesis */
 	psn_shade->c3 = epc->c3_flag;
@@ -353,7 +353,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
-		epv->plaishade * metv->dayl * 12.011e-9;
+		epv->plaishade * 24 * 60 * 60 * 12.011e-9;
 	return (!ok);
 }
 
@@ -386,7 +386,15 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		epvar_struct epvT = *epv;	
 
 		// update temperature
-		psnT.t = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
+		if (i == 0) 
+		{
+			psnT.t = metv->tday;
+		}
+		else
+		{
+			psnT.t = metv->tnight;
+		}
+		//psnT.t = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
 		metvT.tday = psnT.t;
 		metvT.tmin = psnT.t;
 		meanT += metvT.tday;
@@ -410,7 +418,7 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		// update calculate g
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
 		double gl = calGl(&metvT, epc, &epvT, &wfT, 1, sunorshade);
-		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));	
+		//psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));	
 
 		if (!photosynthesis(&psnT, &metvT))
 		{
@@ -528,6 +536,31 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 	}
 }
 
+// read lai to vector 
+int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS)
+{
+	int ok = 1;
+	//int ndays = 365 * yearS;
+	std::ifstream infile(laiDataFile);
+	//int i = 0;
+
+	if (infile.is_open()) {
+		std::string lineStr;
+		while (getline(infile, lineStr)) {
+			laiData.push_back(std::stof(lineStr));
+		}
+		infile.close();
+	}
+	else
+	{
+		bgc_printf(BV_ERROR, "Error in open lai data from bgc()\n");
+		ok = 0;
+	}
+
+	return ok;
+}
+
+// read high time resolution data 
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS)
 {
 	int ok = 1;
@@ -540,13 +573,18 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 		while (getline(infile, lineStr)) {
 			
 			++i;
-			if (i == 1)continue;			
+			//if (i == 1)continue;			
 
 			// remove blank
 			int index = 0;
 			if (!lineStr.empty())
 			{
 				while ((index = lineStr.find(' ', index)) != std::string::npos) lineStr.erase(index, 1);
+			}
+			index = 0;
+			if (!lineStr.empty())
+			{
+				while ((index = lineStr.find('"', index)) != std::string::npos) lineStr.erase(index, 1);
 			}
 
 			std::vector<std::string> resultStr;
@@ -556,7 +594,7 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 			ff->YEAR = std::stoi(resultStr[0]);
 			ff->DAY = std::stoi(resultStr[1]);
 			ff->HRMIN = std::stoi(resultStr[2]);
-			ff->Rd = std::stold(resultStr[3]);
+			/*ff->Rd = std::stold(resultStr[3]);
 			ff->GPP = std::stold(resultStr[4]);
 			ff->NEE = std::stold(resultStr[5]);
 			ff->TA = std::stold(resultStr[6]);
@@ -565,7 +603,16 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 			ff->VPD = std::stold(resultStr[9]);
 			ff->Srad = std::stold(resultStr[10]);
 			ff->SWC = std::stold(resultStr[11]);
-			ff->PAR = std::stold(resultStr[12]);
+			ff->PAR = std::stold(resultStr[12]);*/
+
+			ff->TA = std::stold(resultStr[3]);
+			ff->PREC = std::stold(resultStr[4]);
+			ff->VPD = std::stold(resultStr[5]);
+			ff->Srad = std::stold(resultStr[6]);
+
+			ff->GPP = std::stold(resultStr[7]);
+			ff->NEE = std::stold(resultStr[8]);
+			
 
 			sfData.push_back(ff);
 		}
@@ -596,43 +643,69 @@ void SplitString(const std::string& s, std::vector<std::string>& v, const std::s
 		v.push_back(s.substr(pos1));
 }
 
-char* analysisComm(const int argc, char **argv, high_time_resolution* high_time_resolution)
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM)
 {
-	char * tmp = nullptr;
+	//char * tmp = nullptr;
 	std::string inStationFile = "";
+	laiM->active = false;
 
-	high_time_resolution->output_stress = false;
-	high_time_resolution->output_old_cpool = false;
+	highTM->active = false;
+	highTM->output_stress = false;
+	highTM->output_old_cpool = false;
 
 	for (size_t i = 1; i < argc; i++)
 	{
 		if (std::string(argv[i]) == "-outOldC")
 		{
-			high_time_resolution->output_old_cpool = true;
+			highTM->output_old_cpool = true;
 		}
 
 		if (std::string(argv[i]) == "-outStress")
 		{
-			high_time_resolution->output_stress = true;
+			highTM->output_stress = true;
 		}
-
+		// high time resolution
 		if (std::string(argv[i]) == "-h")
 		{
 			if (i + 1 >= argc)
 			{
 				inStationFile = "wrong";
-				return tmp;
+				//return tmp;
+				std::cout << "please provide the high resoltion station file;" << std::endl;
 			}
 			else
 			{
 				inStationFile = std::string(argv[i + 1]);
+				highTM->active = true;
+				highTM->stationFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
+				strcpy(highTM->stationFile, inStationFile.c_str());
+
+				//highTM->stationFile = inStationFile;
 			}			
 		}
+		// ndvi
+		if(std::string(argv[i]) == "-lai")
+		{
+			if (i + 1 >= argc)
+			{
+				inStationFile = "wrong";
+				std::cout << "please provide the lai file;" << std::endl;
+				//return tmp;
+			}
+			else
+			{
+				inStationFile = std::string(argv[i + 1]);
+				laiM->active = true;
+				laiM->laiFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
+				strcpy(laiM->laiFile, inStationFile.c_str());
+			}
+		}
+
 	}
-	if(inStationFile == "")return tmp;
+	//if(inStationFile == "")return tmp;
 
-	tmp = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
-	strcpy(tmp, inStationFile.c_str());
+	//tmp = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
+	//strcpy(tmp, inStationFile.c_str());
 
-	return tmp;
+	//return tmp;
 }
