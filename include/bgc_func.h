@@ -26,7 +26,7 @@ nflux_struct* nf);
 int make_zero_state_struct(wstate_struct *ws, cstate_struct* cs,
 nstate_struct* ns);
 int atm_pres(double elev, double* pa);
-int prephenology(const control_struct* ctrl, const epconst_struct* epc, 
+int prephenology(const gsi_model gsiM, const control_struct* ctrl, const epconst_struct* epc,
 const siteconst_struct* sitec, const metarr_struct* metarr,
 phenarray_struct* phen);
 int restart_input(control_struct* ctrl, wstate_struct* ws, cstate_struct* cs,
@@ -90,9 +90,16 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
-void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM);
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM);
 
-int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS=1);
+int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS=1);	// read lai data
+
+int initgsiData(const char* gsiDataFile, epconst_struct *epc);	// init gsi parameter
+
+int strSplit(std::string inStr, std::string delim);
+
+int GSI_calculation(const metarr_struct* metarr, const siteconst_struct* sitec, epconst_struct* epc,
+	phenarray_struct* phenarr, control_struct* ctrl);
 // end 
 
 int outflow(const siteconst_struct* sitec, const wstate_struct* ws, wflux_struct* wf);

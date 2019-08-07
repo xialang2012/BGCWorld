@@ -42,9 +42,9 @@ int metarr_init(file metf, metarr_struct* metarr, const climchange_struct* scc,
 int nyears);
 int presim_state_init(wstate_struct* ws, cstate_struct* cs, nstate_struct* ns,
 cinit_struct* cinit);
-int prephenology(const control_struct* ctrl, const epconst_struct* epc, 
+/*int prephenology(const control_struct* ctrl, const epconst_struct* epc, 
 const siteconst_struct* sitec, const metarr_struct* metarr,
-phenarray_struct* phen);//add prephenology function 
+phenarray_struct* phen);*///add prephenology function 
 
 #ifdef __cplusplus
 }

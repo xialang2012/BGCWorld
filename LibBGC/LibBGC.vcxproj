@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="climateLoader.cpp" />
     <ClCompile Include="source\annual_rates.cpp" />
     <ClCompile Include="source\atm_pres.cpp" />
     <ClCompile Include="source\baresoil_evap.cpp" />
@@ -27,6 +26,7 @@
     <ClCompile Include="source\bgc_io.cpp" />
     <ClCompile Include="source\canopy_et.cpp" />
     <ClCompile Include="source\check_balance.cpp" />
+    <ClCompile Include="source\climateLoader.cpp" />
     <ClCompile Include="source\daily_allocation.cpp" />
     <ClCompile Include="source\daymet.cpp" />
     <ClCompile Include="source\dayphen.cpp" />
@@ -40,6 +40,7 @@
     <ClCompile Include="source\get_co2.cpp" />
     <ClCompile Include="source\get_ndep.cpp" />
     <ClCompile Include="source\growth_resp.cpp" />
+    <ClCompile Include="source\GSI_calculation.cpp" />
     <ClCompile Include="source\maint_resp.cpp" />
     <ClCompile Include="source\make_zero_flux_struct.cpp" />
     <ClCompile Include="source\make_zero_state_struct.cpp" />
@@ -137,7 +138,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>MinSpace</Optimization>
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>

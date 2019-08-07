@@ -648,6 +648,10 @@ typedef struct
 	int* remdays_litfall;   /* (nmetdays) number of litfall days remaining */
 	int* predays_transfer;  /* (nmetdays) number of transfer days previous */
 	int* predays_litfall;   /* (nmetdays) number of litfall days previous */
+
+	/* for gsi */
+	int** onday_arr;			/* (doy) ARRAY of first day of transfer period [year;yearday]*/
+	int** offday_arr;		    /* (doy) ARRAY of last day of transfer period [year;yearday]*/
 } phenarray_struct;
 
 /* daily phenological data array */
@@ -805,6 +809,22 @@ typedef struct
 	double decom_KL4;
 	double epctype;       /* (DIM) epctype*/
 	double epctype_change;        /* (DIM) vegetation type*/  
+
+	/* for gsi */
+	double snowcover_limit;		/* critical amount of snow (above: no vegetation period) */
+	double heatsum_limit1;			/* lower limit of heatsum to calculate heatsum index */
+	double heatsum_limit2;			/* upper limit of heatsum to calculate heatsum index */
+	double tmin_limit1;				/* lower limit of tmin to calculate tmin index */
+	double tmin_limit2;				/* upper limit of tmin to calculate tmin index  */
+	double vpd_limit1;				/* lower limit of tmin to calculate vpd index  */
+	double vpd_limit2;				/* upper limit of tmin to calculate vpd index  */
+	double dayl_limit1;				/* lower limit of dayl to calculate vpd index  */
+	double dayl_limit2;				/* upper limit of dayl to calculate vpd index  */
+	int n_moving_avg;				/* moving average (calculated from indicatiors to avoid the effects of single extreme events)*/
+	double GSI_limit_SGS;			/* when GSI first time greater that limit -> start of growing season */
+	double GSI_limit_EGS;			/* when GSI first time less that limit -> end of growing season */
+	/* end for gsi */
+
 } epconst_struct;
 
 /* structure for the photosynthesis routine */
@@ -984,9 +1004,16 @@ typedef struct
 {
 	bool active;
 	char * laiFile;
-	std::ofstream laiFileSM;
 }
 lai_model;
+
+typedef struct
+{
+	bool active;
+	char * gsiFile;
+}
+gsi_model;
+
 
 #ifdef __cplusplus
 }

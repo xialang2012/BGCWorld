@@ -536,6 +536,67 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 	}
 }
 
+int strSplit(std::string inStr, std::string delim)
+{
+	std::vector<std::string> resultStr;
+
+	auto start = 0U;
+	auto end = inStr.find(delim);
+	/*while (end != std::string::npos)
+	{
+		resultStr.push_back(inStr.substr(start, end - start));
+		start = end + delim.length();
+		end = inStr.find(delim, start);
+	}
+	resultStr.push_back(inStr.substr(start, end));
+
+	return resultStr;*/
+	return end;
+}
+
+// read gsi Info 
+int initgsiData(const char* gsiFile, epconst_struct *epc)
+{
+	int ok = 1;
+	//int ndays = 365 * yearS;
+	std::ifstream infile(gsiFile);
+	//int i = 0;
+
+	std::vector<double> gsiEle;
+
+	if (infile.is_open()) {
+		std::string lineStr;		
+		while (getline(infile, lineStr)) {
+			// split line and get first element
+			int index = 0;
+			if (!lineStr.empty())
+				gsiEle.push_back(std::stod(lineStr.substr(0, strSplit(lineStr, " "))));
+		}
+		infile.close();
+	}
+	else
+	{
+		bgc_printf(BV_ERROR, "Error in open gsi file from bgc()\n");
+		ok = 0;
+	}
+
+	epc->snowcover_limit = gsiEle[0];
+	epc->heatsum_limit1 = gsiEle[1];
+	epc->heatsum_limit2 = gsiEle[2];
+	epc->tmin_limit1 = gsiEle[3];
+	epc->tmin_limit2 = gsiEle[4];
+	epc->vpd_limit1 = gsiEle[5];
+	epc->vpd_limit2 = gsiEle[6];
+	epc->dayl_limit1 = gsiEle[7];
+	epc->dayl_limit2 = gsiEle[8];
+	epc->n_moving_avg = static_cast<int>(gsiEle[9]);
+	epc->GSI_limit_SGS = gsiEle[10];
+	epc->GSI_limit_EGS = gsiEle[11];
+
+
+	return ok;
+}
+
 // read lai to vector 
 int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS)
 {
@@ -643,11 +704,13 @@ void SplitString(const std::string& s, std::vector<std::string>& v, const std::s
 		v.push_back(s.substr(pos1));
 }
 
-void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM)
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM)
 {
 	//char * tmp = nullptr;
 	std::string inStationFile = "";
+
 	laiM->active = false;
+	gsiM->active = false;
 
 	highTM->active = false;
 	highTM->output_stress = false;
@@ -683,7 +746,8 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 				//highTM->stationFile = inStationFile;
 			}			
 		}
-		// ndvi
+
+		// lai
 		if(std::string(argv[i]) == "-lai")
 		{
 			if (i + 1 >= argc)
@@ -698,6 +762,24 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 				laiM->active = true;
 				laiM->laiFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
 				strcpy(laiM->laiFile, inStationFile.c_str());
+			}
+		}
+
+		// gsi
+		if (std::string(argv[i]) == "-gsi")
+		{
+			if (i + 1 >= argc)
+			{
+				inStationFile = "wrong";
+				std::cout << "please provide the gsi file;" << std::endl;
+				//return tmp;
+			}
+			else
+			{
+				inStationFile = std::string(argv[i + 1]);
+				gsiM->active = true;
+				gsiM->gsiFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
+				strcpy(gsiM->gsiFile, inStationFile.c_str());
 			}
 		}
 

@@ -111,7 +111,8 @@ int main(int argc, char *argv[])
 
 	/* Process command line arguments */
 	opterr = 0;
-	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM);
+	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM, &bgcin.gsiM);
+
 	/*if (inStationFile != nullptr)
 	{
 		if (strcmp(inStationFile, "wrong") == 0)

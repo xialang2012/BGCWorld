@@ -10,7 +10,7 @@ See copyright.txt for Copyright information
 
 #include "bgc.h"
 
-int prephenology(const control_struct* ctrl, const epconst_struct* epc, 
+int prephenology(const gsi_model gsiM, const control_struct* ctrl, const epconst_struct* epc,
 const siteconst_struct* sitec, const metarr_struct* metarr,
 phenarray_struct* phen)
 {
@@ -710,10 +710,19 @@ phenarray_struct* phen)
 				remdays_litfall[pday] = 0;
 				predays_litfall[pday] = 0;
 			}
-			
-			onday = onday_arr[py];
-			offday = offday_arr[py];
-			
+
+			// if gsi actived
+			if (gsiM.active)
+			{
+				onday = phen->onday_arr[py][1];
+				offday = phen->offday_arr[py][1];
+			}
+			else
+			{
+				onday = onday_arr[py];
+				offday = offday_arr[py];
+			}
+
 			if (onday == -1 && offday == -1)
 			{
 				/* this is the special signal to repress all vegetation

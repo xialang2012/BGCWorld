@@ -291,8 +291,15 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	
 	bgc_printf(BV_DIAG, "done atm_pres\n");
 	
+	// init gsi
+	if (bgcin->gsiM.active)
+	{
+		if (!initgsiData(bgcin->gsiM.gsiFile, &epc)) return -1;
+		GSI_calculation(&metarr, &sitec, &epc, &phenarr, &ctrl);
+	}
+
 	/* determine phenological signals */
-	if (ok && prephenology(&ctrl, &epc, &sitec, &metarr, &phenarr))
+	if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 	{
 		bgc_printf(BV_ERROR, "Error in call to prephenology(), from bgc()\n");
 		ok=0;
@@ -401,16 +408,12 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	// read high time resolution data to sfData
 	std::vector<StationDataFlux*> sfData;
 	if (bgcin->hModel.active)
-	{
 		if (!readStationFluxData(sfData, bgcin->hModel.stationFile, tmpyears)) return 1;
-	}
 
 	// read lai data
 	std::vector<float> laiData;
 	if (bgcin->laiM.active)
-	{
 		if (!readLaiData(laiData, bgcin->laiM.laiFile, tmpyears)) return 1;
-	}
 
 	/* do loop for spinup. will only execute once for MODE_MODEL */
 	do
@@ -1425,7 +1428,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 								ok=0;
 							}
 
-							if (ok && prephenology(&ctrl, &epc, &sitec, &metarr, &phenarr))
+							if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 							{
 								bgc_printf(BV_ERROR, "Error in call to prephenology(), from bgc()\n");
 								ok=0;
@@ -1469,7 +1472,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 								ok=0;
 							}
 
-							if (ok && prephenology(&ctrl, &epc, &sitec, &metarr, &phenarr))
+							if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 							{
 								bgc_printf(BV_ERROR, "Error in call to prephenology(), from bgc()\n");
 								ok=0;
@@ -1522,7 +1525,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 									ok=0;
 								}
 
-								if (ok && prephenology(&ctrl, &epc, &sitec, &metarr, &phenarr))
+								if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 								{
 									bgc_printf(BV_ERROR, "Error in call to prephenology(), from bgc()\n");
 									ok=0;
@@ -1575,7 +1578,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 									bgc_printf(BV_ERROR, "Error in free_phenmem() from bgc()\n");
 									ok=0;
 								}
-								if (ok && prephenology(&ctrl, &epc, &sitec, &metarr, &phenarr))
+								if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 								{
 									bgc_printf(BV_ERROR, "Error in call to prephenology(), from bgc()\n");
 									ok=0;
@@ -1804,6 +1807,12 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 */
 
 	bgcin->hModel.tmpHighFile.close();
+	if (bgcin->hModel.active)
+		free(bgcin->hModel.stationFile);
+	if (bgcin->laiM.active)
+		free(bgcin->laiM.laiFile);
+	if (bgcin->gsiM.active)
+		free(bgcin->gsiM.gsiFile);
 	/* return error status */	
 	return (!ok);
 }

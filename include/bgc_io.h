@@ -34,8 +34,10 @@ typedef struct
 	epconst_struct epc;     /* ecophysiological constants */
 	//int climate_id;/*用于读取气象资料的id*/
 	soilpar_struct vspar; /*冻土模块土壤性质，e.g 质地，导热率等*/
-	high_time_resolution hModel;
-	lai_model laiM;
+
+	high_time_resolution hModel;	// high time resolution
+	lai_model laiM;					// input lai
+	gsi_model gsiM;					// gsi model
 
 } bgcin_struct;
 
