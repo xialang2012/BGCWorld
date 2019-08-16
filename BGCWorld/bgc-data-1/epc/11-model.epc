@@ -1,0 +1,50 @@
+ECOPHYS       C3 grass
+1             (flag)    1 = WOODY             0 = NON-WOODY
+0             (flag)    1 = EVERGREEN         0 = DECIDUOUS
+1             (flag)    1 = C3 PSN            0 = C4 PSN
+1             (flag)    1 = MODEL PHENOLOGY   0 = USER-SPECIFIED PHENOLOGY
+105           *(yday)    yearday to start new growth  (when phenology flag = 0)
+294           *(yday)    yearday to end litterfall  (when phenology flag = 0)
+{TGP}           (prop.)   transfer growth period as fraction of growing season
+{LFG}           (prop.)   litterfall as fraction of growing season
+{LFRT}           (1/yr)    annual leaf and fine root turnover fraction
+{LWT}         *(1/yr)    annual live wood turnover fraction
+{WPM}           (1/yr)    annual whole-plant mortality fraction (herbivory)
+{FM}           (1/yr)    annual fire mortality fraction
+{FRC:LC}           (ratio)   (ALLOCATION) new fine root C : new leaf C
+{SC:LC}          *(ratio)   (ALLOCATION) new stem C : new leaf C
+{LWC:TWC}          *(ratio)   (ALLOCATION) new live wood C : new total wood C
+{CRS:SC}          *(ratio)   (ALLOCATION) new croot C : new stem C
+{CGP}          (prop.)   (ALLOCATION) current growth proportion 
+{C:Nleaf}          (kgC/kgN) C:N of leaves
+{C:Nlit}          (kgC/kgN) C:N of leaf litter, after retranslocation
+{C:Nfr}          (kgC/kgN) C:N of fine roots 
+{C:Nlw}          *(kgC/kgN) C:N of live wood 
+{C:Ndw}          *(kgC/kgN) C:N of dead wood
+{Llab}          (DIM)     leaf litter labile proportion
+{Lcel}          (DIM)     leaf litter cellulose proportion
+{Llig}          (DIM)     leaf litter lignin proportion
+{FRlab}          (DIM)     fine root labile proportion
+{FRcel}          (DIM)     fine root cellulose proportion
+{FRlig}          (DIM)     fine root lignin proportion
+{DWcel}         *(DIM)     dead wood cellulose proportion
+{DWlig}         *(DIM)     dead wood lignin proportion
+{Wint}         (1/LAI/d) canopy water interception coefficient 
+{K}           (DIM)     canopy light extinction coefficient
+{LAIall:proj}           (DIM)     all-sided to projected leaf area ratio
+{SLA}          (m2/kgC)  canopy average specific leaf area (projected area basis)
+{SLAshd:sun}           (DIM)     ratio of shaded SLA:sunlit SLA
+{FLNR}          (DIM)     fraction of leaf N in Rubisco
+{gsmax}         (m/s)     maximum stomatal conductance (projected area basis)
+{gcut}       (m/s)     cuticular conductance (projected area basis) 
+{gbl}          (m/s)     boundary layer conductance (projected area basis)
+{LWPi}          (MPa)     leaf water potential: start of conductance reduction
+{LWPf}          (MPa)     leaf water potential: complete conductance reduction
+{VPDi}         (Pa)      vapor pressure deficit: start of conductance reduction
+{VPDf}        (Pa)      vapor pressure deficit: complete conductance reduction
+0.21	      (DIM)     site shortwave albedo
+1.0		(DIM)	粗木质部残体分解比。
+1.0		(DIM)	soil3土壤碳库分解比例，越小分解越慢。
+1.0		(DIM)	soil4土壤碳库分解比例，越小分解越慢。
+1.0		(DIM)	litr2系数，原值=0.09	
+1.0		(DIM)	litr4系数，原值=0.05

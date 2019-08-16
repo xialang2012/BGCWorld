@@ -12,7 +12,7 @@ See copyright.txt for Copyright information
 
 #include "bgc.h"
 
-int radtrans(const cstate_struct* cs, const epconst_struct* epc, 
+int radtrans(cstate_struct* cs, const epconst_struct* epc, 
 metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> &laiData, int metday)
 {
 	/* calculate the projected leaf area and SLA for sun and shade fractions
@@ -45,7 +45,7 @@ metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> 
 	{
 		/* Calculate whole-canopy projected and all-sided LAI */
 		epv->proj_lai = cs->leafc * epc->avg_proj_sla;
-		if (metday == 184)
+		if (metday == 154)
 		{
 			std::cout << "" << std::endl;
 		}
@@ -54,6 +54,7 @@ metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> 
 		{
 			if (laiData[metday] != -1)
 				epv->proj_lai = laiData[metday];
+				cs->leafc = epv->proj_lai / epc->avg_proj_sla;
 		}
 		epv->all_lai = epv->proj_lai * epc->lai_ratio;
 		

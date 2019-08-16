@@ -113,24 +113,6 @@ int main(int argc, char *argv[])
 	opterr = 0;
 	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM, &bgcin.gsiM);
 
-	/*if (inStationFile != nullptr)
-	{
-		if (strcmp(inStationFile, "wrong") == 0)
-		{
-			std::cout << "please provide the high resoltion station file;" << std::endl;
-			return 1;
-		}
-		else
-		{
-			bgcin.hModel.active = true;
-			bgcin.hModel.stationFile = inStationFile;
-		}
-	}
-	else
-	{
-		bgcin.hModel.active = false;
-	}*/
-
 	while((c = getopt(argc, argv, (char*)"pVsl:v:ugmn:a")) != -1)
 	{
 		switch(c)

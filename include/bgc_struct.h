@@ -993,11 +993,16 @@ typedef struct
 
 typedef struct
 {
-	bool output_stress;
+	bool output_stress;	// output stress
 	bool output_old_cpool;
-	bool active;
+	bool active;		// main control of hightime
+	bool output_carbon;	// output hightime carbon
+
 	char * stationFile;
 	std::ofstream tmpHighFile;
+	std::ofstream highFile_carbon;
+	std::ofstream highFile_stress;
+
 }high_time_resolution;
 
 typedef struct

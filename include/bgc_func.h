@@ -50,7 +50,7 @@ int leaf_litfall(const epconst_struct* epc, double litfallc,
 cflux_struct* cf, nflux_struct* nf);
 int froot_litfall(const epconst_struct* epc, double litfallc, 
 cflux_struct* cf, nflux_struct* nf);
-int radtrans(const cstate_struct* cs, const epconst_struct* epc,
+int radtrans(cstate_struct* cs, const epconst_struct* epc,
 metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> &laiData =std::vector<float>(), int metday=-1);
 int prcp_route(const metvar_struct* metv, double precip_int_coef,
 double all_lai, wflux_struct* wf); 
@@ -74,14 +74,14 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
 int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
-	const cstate_struct* cs, const double albedo, psn_struct *psn, 
+	cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, const cstate_struct* cs, const double albedo,
+int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
 	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
 	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
 double simulationPar(const double inPar, const double timePer);
 double simulationPar1(const double inPar);
-double calppfdT(const cstate_struct* cs, const epconst_struct* epc,
+double calppfdT(cstate_struct* cs, const epconst_struct* epc,
 	metvar_struct* metv, epvar_struct* epv, double albedo, const int sunorshade);
 double calGl(const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, wflux_struct* wf, const int mode, const int sunorshade);

@@ -36,6 +36,16 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 		bgcin->hModel.tmpHighFile.open("./outputs/" + std::to_string( bgcin->sitec.climate_id ) + "_Psn_High.csv");
 		bgcin->hModel.tmpHighFile << "year, " << "daya, " << "temperature, " << "temperature_High, " << "psnsun_cpool, " <<
 			"psnsun_cpool_High, " << "psnshade_cpool, " << "psnshade_cpool_High, " << "carbon limited, " << "carbon limited Per" << std::endl;
+
+		if (bgcin->hModel.output_stress)
+		{
+			bgcin->hModel.highFile_stress.open("./outputs/" + std::to_string(bgcin->sitec.climate_id) + "_Stress_High.csv");
+		}
+
+		if (bgcin->hModel.output_carbon)
+		{
+			bgcin->hModel.highFile_carbon.open("./outputs/" + std::to_string(bgcin->sitec.climate_id) + "_Carbon_High.csv");
+		}
 	}
 	else if(mode == MODE_MODEL)
 	{
@@ -352,8 +362,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			{
 				bgc_printf(BV_ERROR, "Error in call to make_zero_state_struct(), from bgc()\n");
 				ok=0;
-			}
-		
+			}		
 		}
 		bgc_printf(BV_DIAG, "done firstday\n");
 	}
@@ -699,15 +708,16 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			/* calculate leaf area index, sun and shade fractions, and specific
 			leaf area for sun and shade canopy fractions, then calculate
 			canopy radiation interception and transmission */
+			//std::cout << cs.leafc << yday << std::endl;
 			if (ok && radtrans(&cs, &epc, &metv, &epv, sitec.sw_alb, laiData, metday))
 			{
 				bgc_printf(BV_ERROR, "Error in radtrans() from bgc()\n");
 				ok=0;
 			}
-			if (metday == 184)
+			/*if (metday == 154)
 			{
 				int  a = 0;
-			}
+			}*/
 			/* update the ann max LAI for annual diagnostic output */
 			if (epv.proj_lai > epv.ytd_maxplai) epv.ytd_maxplai = epv.proj_lai;
 			
@@ -1807,11 +1817,11 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 */
 
 	bgcin->hModel.tmpHighFile.close();
-	if (bgcin->hModel.active)
+	if (bgcin->hModel.active && mode != MODE_SPINUP)
 		free(bgcin->hModel.stationFile);
-	if (bgcin->laiM.active)
+	if (bgcin->laiM.active && mode != MODE_SPINUP)
 		free(bgcin->laiM.laiFile);
-	if (bgcin->gsiM.active)
+	if (bgcin->gsiM.active && mode != MODE_SPINUP)
 		free(bgcin->gsiM.gsiFile);
 	/* return error status */	
 	return (!ok);

@@ -285,7 +285,7 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *f
 
 
 //  for high time resolution
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
+int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS)//,FILE *fp_ci, int mode)
 {
 
@@ -359,7 +359,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 
 //  for high time resolution
 int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
-	const cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
+	cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
 	const int yearS, const int daysS, const int sunorshade)//,int sun,FILE *fp_ci, int mode)
 {
 	int ok = 1;
@@ -386,15 +386,17 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		epvar_struct epvT = *epv;	
 
 		// update temperature
-		if (i == 0) 
-		{
-			psnT.t = metv->tday;
+		if (24 * 60 / timeRes == 2) // for two time piece, night and day
+		{			
+			if (i == 0)
+				psnT.t = metv->tday;
+			else
+				psnT.t = metv->tnight;
 		}
-		else
-		{
-			psnT.t = metv->tnight;
+		else // for any time pieces
+		{			
+			psnT.t = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
 		}
-		//psnT.t = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
 		metvT.tday = psnT.t;
 		metvT.tmin = psnT.t;
 		meanT += metvT.tday;
@@ -411,35 +413,44 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		/* for hightime stress output*/
 		if (psnT.ppfd <= 0 )
 		{
+			// for stress
 			if(sunorshade == 1 && high_time_resolution->output_stress) 
-				high_time_resolution->tmpHighFile << ", ";
+				high_time_resolution->highFile_stress << ", -999";
+			// for carbon
+			if (sunorshade == 1 && high_time_resolution->output_carbon)
+				high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr + 1) % 365 << ", " << i+1 << ", " << std::endl;
+
 			continue;
 		}
 		// update calculate g
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
 		double gl = calGl(&metvT, epc, &epvT, &wfT, 1, sunorshade);
-		//psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));	
+		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
 
 		if (!photosynthesis(&psnT, &metvT))
 		{
 			totalA += psnT.A;
-			//std::cout << psnT.t << ", " << psnT.g  << ", " << psnT.A << std::endl;
 			++totalNum;
+			// for carbon
+			if (sunorshade == 1 && high_time_resolution->output_carbon)
+				high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.A << std::endl;
 		}
 
 		/* for hightime stress output*/
 		if (psnT.Av > psnT.Aj )
 		{
 			if(high_time_resolution->output_stress)
-				high_time_resolution->tmpHighFile << ", " << 0;	// rad limited
+				high_time_resolution->highFile_stress << ", " << 0;	// rad limited
 		}
 		else 
 		{
 			if(high_time_resolution->output_stress)
-				high_time_resolution->tmpHighFile << ", " << 1;	// carbon limited
+				high_time_resolution->highFile_stress << ", " << 1;	// carbon limited
 			totalPhotoNum += 1;
 		}
 	}
+	if (high_time_resolution->output_stress)
+		high_time_resolution->highFile_stress << std::endl;
 
 	psn->A = totalA / totalNum;
 	psn->t = meanT / (24 * 60 / timeRes);
@@ -504,7 +515,7 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 }
 
 
-double calppfdT(const cstate_struct* cs, const epconst_struct* epc,
+double calppfdT(cstate_struct* cs, const epconst_struct* epc,
 	metvar_struct* metv, epvar_struct* epv, double albedo, const int sunorshade)
 {
 	radtrans(cs, epc, metv, epv, albedo);
@@ -714,6 +725,7 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 
 	highTM->active = false;
 	highTM->output_stress = false;
+	highTM->output_carbon = false;
 	highTM->output_old_cpool = false;
 
 	for (size_t i = 1; i < argc; i++)
@@ -722,7 +734,10 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 		{
 			highTM->output_old_cpool = true;
 		}
-
+		if (std::string(argv[i]) == "-outCarbon")
+		{
+			highTM->output_carbon = true;
+		}
 		if (std::string(argv[i]) == "-outStress")
 		{
 			highTM->output_stress = true;
@@ -742,8 +757,6 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 				highTM->active = true;
 				highTM->stationFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
 				strcpy(highTM->stationFile, inStationFile.c_str());
-
-				//highTM->stationFile = inStationFile;
 			}			
 		}
 
@@ -784,10 +797,4 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 		}
 
 	}
-	//if(inStationFile == "")return tmp;
-
-	//tmp = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
-	//strcpy(tmp, inStationFile.c_str());
-
-	//return tmp;
 }
