@@ -1,14 +1,2 @@
     plotID  TsoilErr
        123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0

@@ -73,7 +73,7 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
-int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
 int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,

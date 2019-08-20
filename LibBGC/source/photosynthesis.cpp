@@ -308,7 +308,11 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 	for CO2 vs. water vapor */
 	psn_sun->g = epv->gl_t_wv_sun * 1e6 / (1.6*R*(metv->tday + 273.15));
 	psn_sun->dlmr = epv->dlmr_area_sun;
-	if (ok && photosynthesisTimeRes(high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
+
+	std::vector<float> PsnSun, PsnShade;
+	std::vector<std::vector<float>> highTimePsnA = { PsnSun, PsnShade };	// for hightime
+
+	if (ok && photosynthesisTimeRes(highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -338,7 +342,8 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 	for CO2 vs. water vapor */
 	psn_shade->g = epv->gl_t_wv_shade * 1e6 / (1.6*R*(metv->tday + 273.15));
 	psn_shade->dlmr = epv->dlmr_area_shade;
-	if (ok && photosynthesisTimeRes(high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
+
+	if (ok && photosynthesisTimeRes(highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -347,18 +352,37 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 	bgc_printf(BV_DIAG, "\t\tdone shade_psn\n");
 
 	epv->assim_shade = psn_shade->A;
-
 	/* for the final flux assignment, the assimilation output
 		needs to have the maintenance respiration rate added, this
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
 		epv->plaishade * 24 * 60 * 60 * 12.011e-9;
+
+	// output Carbon
+	if (high_time_resolution->output_carbon)
+	{
+		for (int i = 0; i < highTimePsnA[0].size(); ++i)
+		{
+			if (highTimePsnA[0][i] == 0)
+			{
+				high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << 0 << std::endl;
+				continue;
+			}
+			float cSun = (highTimePsnA[0][i] + epv->dlmr_area_sun) *
+				epv->plaisun * 24 * 60 * 60 / highTimePsnA[0].size() * 12.011e-9;
+
+			float cShade = (highTimePsnA[1][i] + epv->dlmr_area_shade) *
+				epv->plaishade * 24 * 60 * 60 / highTimePsnA[0].size() * 12.011e-9;
+
+			high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << cSun+ cShade << std::endl;
+		}
+	}
 	return (!ok);
 }
 
 //  for high time resolution
-int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
 	const int yearS, const int daysS, const int sunorshade)//,int sun,FILE *fp_ci, int mode)
 {
@@ -414,11 +438,15 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		if (psnT.ppfd <= 0 )
 		{
 			// for stress
-			if(sunorshade == 1 && high_time_resolution->output_stress) 
+			if(sunorshade == 1 && high_time_resolution->output_stress)
 				high_time_resolution->highFile_stress << ", -999";
 			// for carbon
-			if (sunorshade == 1 && high_time_resolution->output_carbon)
-				high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr + 1) % 365 << ", " << i+1 << ", " << std::endl;
+			//if (sunorshade == 1 && high_time_resolution->output_carbon)
+			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr + 1) % 365 << ", " << i+1 << ", " << std::endl;
+			if (sunorshade == 1)
+				highTimePsnA[0].push_back(0);
+			else
+				highTimePsnA[1].push_back(0);
 
 			continue;
 		}
@@ -431,9 +459,13 @@ int photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflu
 		{
 			totalA += psnT.A;
 			++totalNum;
+			if (sunorshade == 1)
+				highTimePsnA[0].push_back(psnT.A);
+			else
+				highTimePsnA[1].push_back(psnT.A);
 			// for carbon
-			if (sunorshade == 1 && high_time_resolution->output_carbon)
-				high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.A << std::endl;
+			//if (sunorshade == 1 && high_time_resolution->output_carbon)
+			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.A << std::endl;
 		}
 
 		/* for hightime stress output*/
