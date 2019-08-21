@@ -328,7 +328,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnsun_to_cpool = (epv->assim_sun + epv->dlmr_area_sun) *
-		epv->plaisun * 24*60*60 * 12.011e-9;
+		epv->plaisun *  metv->dayl * 12.011e-9;
 
 	/* SHADED canopy fraction photosynthesis */
 	psn_shade->c3 = epc->c3_flag;
@@ -357,7 +357,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
-		epv->plaishade * 24 * 60 * 60 * 12.011e-9;
+		epv->plaishade *  metv->dayl * 12.011e-9;
 
 	// output Carbon
 	if (high_time_resolution->output_carbon)
@@ -388,14 +388,9 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 {
 	int ok = 1;
 	double meanT = 0;
-
 	int dayCurr = yearS * 365 + daysS;
-
-	/*if (dayCurr == 729)
-		std::cout << yearS << " " << dayCurr << std::endl;*/	
-
-	// time resolution
-	int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;
+	
+	int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;	// time resolution
 
 	// total final assimilation rate
 	double totalA = 0;  // used for calculating temperature
@@ -434,12 +429,13 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 
 		// update calculate ppfd 
 		psnT.ppfd = calppfdT(cs, epc, &metvT, &epvT, albedo, sunorshade);
+
 		/* for hightime stress output*/
 		if (psnT.ppfd <= 0 )
 		{
 			// for stress
 			if(sunorshade == 1 && high_time_resolution->output_stress)
-				high_time_resolution->highFile_stress << ", -999";
+				high_time_resolution->highFile_stress << ", -";
 			// for carbon
 			//if (sunorshade == 1 && high_time_resolution->output_carbon)
 			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr + 1) % 365 << ", " << i+1 << ", " << std::endl;

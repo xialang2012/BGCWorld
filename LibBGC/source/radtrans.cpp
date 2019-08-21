@@ -47,7 +47,7 @@ metvar_struct* metv, epvar_struct* epv, double albedo, const std::vector<float> 
 		epv->proj_lai = cs->leafc * epc->avg_proj_sla;
 		if (metday == 154)
 		{
-			std::cout << "" << std::endl;
+			//std::cout << "" << std::endl;
 		}
 		// add lai as a change parameter
 		if (metday != -1 && laiData.size() != 0)

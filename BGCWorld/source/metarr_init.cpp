@@ -22,7 +22,7 @@ VARIABLE    UNITS
 yday        (none) (yearday)
 prcp        cm     (daily total precipitation, water equivalent)  
 tmax        deg C  (daily maximum temperature) 
-tmin        deg C  (daily minimum temperature)
+tmin        deg C  (daily minimum temperature) 
 VPD         Pa     (daylight average VPD)
 swavgfd     W/m2   (daylight average shortwave flux density)
 daylength   s      (daylight duration)

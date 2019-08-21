@@ -215,6 +215,7 @@ epvar_struct* epv)
 	}
 	else /* no fine roots on */
 		cf->froot_mr = 0.0;
+
 	/* TREE-specific fluxes */
 	if (epc->woody)
 	{
