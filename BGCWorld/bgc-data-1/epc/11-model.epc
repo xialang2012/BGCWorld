@@ -3,8 +3,8 @@ ECOPHYS       C3 grass
 0             (flag)    1 = EVERGREEN         0 = DECIDUOUS
 1             (flag)    1 = C3 PSN            0 = C4 PSN
 1             (flag)    1 = MODEL PHENOLOGY   0 = USER-SPECIFIED PHENOLOGY
-105           *(yday)    yearday to start new growth  (when phenology flag = 0)
-294           *(yday)    yearday to end litterfall  (when phenology flag = 0)
+0           *(yday)    yearday to start new growth  (when phenology flag = 0)
+0           *(yday)    yearday to end litterfall  (when phenology flag = 0)
 {TGP}           (prop.)   transfer growth period as fraction of growing season
 {LFG}           (prop.)   litterfall as fraction of growing season
 {LFRT}           (1/yr)    annual leaf and fine root turnover fraction

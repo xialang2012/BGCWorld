@@ -261,7 +261,7 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	
 	/* assign leaf-level conductance to transpired water vapor, 
 	for use in calculating co2 conductance for farq_psn() */
-	epv->gl_t_wv_sun = gl_t_wv_sun; 
+	epv->gl_t_wv_sun = gl_t_wv_sun;
 	epv->gl_t_wv_shade = gl_t_wv_shade;
 	
 	/* assign verbose output variables if requested */
