@@ -714,10 +714,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 				bgc_printf(BV_ERROR, "Error in radtrans() from bgc()\n");
 				ok=0;
 			}
-			/*if (metday == 154)
-			{
-				int  a = 0;
-			}*/
+
 			/* update the ann max LAI for annual diagnostic output */
 			if (epv.proj_lai > epv.ytd_maxplai) epv.ytd_maxplai = epv.proj_lai;
 			
@@ -798,7 +795,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			bgc_printf(BV_DIAG, "%d\t%d\tdone soilpsi\n",simyr,yday);
 
 			/* daily maintenance respiration */
-			if (ok && maint_resp(&ws,&sitec,&cs, &ns, &epc, &metv, &cf, &epv))
+			if (ok && maint_resp(&ws,&sitec,&cs, &ns, &epc, &metv, &cf, &epv, bgcin->hModel, sfData, simyr, yday, mode))
 			{
 				bgc_printf(BV_ERROR, "Error in m_resp() from bgc()\n");
 				ok=0;

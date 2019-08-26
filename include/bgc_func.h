@@ -60,7 +60,7 @@ int soilpsi(const siteconst_struct* sitec, double soilw, double* psi,
 double* vwc_out);
 int maint_resp(wstate_struct* ws,const siteconst_struct* sitec,const cstate_struct* cs, const nstate_struct* ns,
 const epconst_struct* epc, const metvar_struct* metv, cflux_struct* cf,
-epvar_struct* epv);
+epvar_struct* epv, const high_time_resolution& high_time_resolution, std::vector<StationDataFlux*> &sfData, const int simyr, const int yday, int mode);
 int canopy_et(const metvar_struct* metv, const epconst_struct* epc, 
 epvar_struct* epv, wflux_struct* wf, int verbose);
 int penmon(const pmet_struct* in, int out_flag,	double* et);
@@ -73,10 +73,10 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
-int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
+int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
 	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
 	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
 double simulationPar(const double inPar, const double timePer);

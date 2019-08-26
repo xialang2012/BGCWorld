@@ -285,7 +285,7 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *f
 
 
 //  for high time resolution
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
+int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS)//,FILE *fp_ci, int mode)
 {
 
@@ -362,6 +362,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 	// output Carbon
 	if (high_time_resolution->output_carbon)
 	{
+		int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;	// time resolution
 		for (int i = 0; i < highTimePsnA[0].size(); ++i)
 		{
 			if (highTimePsnA[0][i] == 0)
@@ -370,10 +371,10 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 				continue;
 			}
 			float cSun = (highTimePsnA[0][i] + epv->dlmr_area_sun) *
-				epv->plaisun * 24 * 60 * 60 / highTimePsnA[0].size() * 12.011e-9;
+				epv->plaisun * timeRes * 60  * 12.011e-9;
 
 			float cShade = (highTimePsnA[1][i] + epv->dlmr_area_shade) *
-				epv->plaishade * 24 * 60 * 60 / highTimePsnA[0].size() * 12.011e-9;
+				epv->plaishade * timeRes * 60 * 12.011e-9;
 
 			high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << cSun+ cShade << std::endl;
 		}
@@ -382,19 +383,20 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, cons
 }
 
 //  for high time resolution
-int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, const wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
 	const int yearS, const int daysS, const int sunorshade)//,int sun,FILE *fp_ci, int mode)
 {
 	int ok = 1;
 	double meanT = 0;
 	int dayCurr = yearS * 365 + daysS;
-	
+
 	int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;	// time resolution
 
 	// total final assimilation rate
 	double totalA = 0;  // used for calculating temperature
 	double totalPhotoNum = 0;  // used for calculating carbon or rad limitation
+	double canpoyET = 0;
 
 	int totalNum = 0;
 	for (int i = 0; i < 24 * 60/ timeRes; ++i)
@@ -418,14 +420,15 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 		}
 		metvT.tday = psnT.t;
 		metvT.tmin = psnT.t;
+		metvT.tavg = psnT.t;/**/
+		metvT.prcp = sfData[dayCurr * 24 * 60 / timeRes + i]->PREC;
+		metvT.dayl = timeRes * 60;
+
 		meanT += metvT.tday;
 
 		// update par and swavgfd
 		metvT.swavgfd = sfData[dayCurr* 24 * 60 / timeRes + i]->Srad;
-		metvT.par = metvT.swavgfd * RAD2PAR;	
-
-		//std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << psnT.t << " " <<
-		//	metvT.swavgfd << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;
+		metvT.par = metvT.swavgfd * RAD2PAR;
 
 		// update calculate ppfd 
 		psnT.ppfd = calppfdT(cs, epc, &metvT, &epvT, albedo, sunorshade);
@@ -436,9 +439,8 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 			// for stress
 			if(sunorshade == 1 && high_time_resolution->output_stress)
 				high_time_resolution->highFile_stress << ", -";
+
 			// for carbon
-			//if (sunorshade == 1 && high_time_resolution->output_carbon)
-			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr + 1) % 365 << ", " << i+1 << ", " << std::endl;
 			if (sunorshade == 1)
 				highTimePsnA[0].push_back(0);
 			else
@@ -446,9 +448,15 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 
 			continue;
 		}
+		
 		// update calculate g
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
 		double gl = calGl(&metvT, epc, &epvT, &wfT, 1, sunorshade);
+		canpoyET += wfT.canopyw_evap;
+		if (sunorshade == 1)
+			std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << gl << " " << metvT.dayl << " " <<
+			wfT.canopyw_evap << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;
+
 		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
 
 		if (!photosynthesis(&psnT, &metvT))
@@ -483,6 +491,7 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 	psn->A = totalA / totalNum;
 	psn->t = meanT / (24 * 60 / timeRes);
 	psn->O2 = totalPhotoNum / totalNum;  // carbon limitation percent
+	wf->canopyw_evap = canpoyET;
 	return (!ok);
 }
 
@@ -561,6 +570,39 @@ double calppfdT(cstate_struct* cs, const epconst_struct* epc,
 double calGl(const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, wflux_struct* wf, const int mode, const int sunorshade)
 {
+	// update wf.prcp_to_canopyw
+	int ok = 1;
+	double max_int;
+	double prcp, through;
+
+	prcp = metv->prcp;
+
+	/* maximum daily canopy interception
+	(kg intercepted/kg rain/unit all-sided LAI/day) */
+	max_int = epc->int_coef * prcp * epv->all_lai;
+
+	/* rain vs. snow, and canopy interception */
+	if (metv->tavg > 0.0)             /* rain */
+	{
+		if (prcp <= max_int)          /* all intercepted */
+		{
+			wf->prcp_to_canopyw = prcp;
+			through = 0.0;
+		}
+		else                          /* canopy limits interception */
+		{
+			wf->prcp_to_canopyw = max_int;
+			through = prcp - max_int;
+		}
+
+		wf->prcp_to_soilw = through;  /* throughfall to soil water */
+	}
+	else                              /* snow */
+	{
+		wf->prcp_to_snoww = prcp;     /* no interception */
+	}
+
+	// cal ET
 	canopy_et(metv, epc, epv, wf, mode);
 
 	if (sunorshade == 1)

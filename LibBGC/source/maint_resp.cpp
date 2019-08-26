@@ -124,7 +124,8 @@ See copyright.txt for Copyright information
 
 int maint_resp(wstate_struct* ws,const siteconst_struct* sitec,const cstate_struct* cs, const nstate_struct* ns,
 const epconst_struct* epc, const metvar_struct* metv, cflux_struct* cf,
-epvar_struct* epv)
+epvar_struct* epv, const high_time_resolution& highT, std::vector<StationDataFlux*> &sfData, 
+const int simyr, const int yday, int mode)
 {
 	/*
 	maintenance respiration routine
@@ -165,7 +166,13 @@ epvar_struct* epv)
 		//t2=0.8;
 		//q10=1.9;
 	}*/
-	
+	int timeRes = 0;
+	int dayCurr = 0;
+	if(highT.active)
+	{
+		dayCurr = simyr * 365 + yday;
+		timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;
+	}
 
 	/* leaf day and night maintenance respiration when leaves on */
 	if (cs->leafc)
@@ -195,6 +202,28 @@ epvar_struct* epv)
 		/* leaf, night */
 		exponent = (metv->tnight - 20.0) / 10.0;
 		cf->leaf_night_mr =t2 * t1 * pow(q10, exponent) * (86400.0 - metv->dayl) / 86400.0;
+
+		// for high time MR
+		if (highT.active && mode == MODE_MODEL)
+		{
+			cf->leaf_day_mr = 0.0;
+			cf->leaf_night_mr = 0.0;
+			for (int i = 0; i < 24 * 60 / timeRes; ++i)
+			{
+				double temp= sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
+				exponent = (temp - 20.0) / 10.0;
+
+				if (sfData[dayCurr * 24 * 60 / timeRes + i]->Srad > 0)	// daytime
+				{					
+					cf->leaf_day_mr += t2 * t1 * pow(q10, exponent) * timeRes *60 / 86400.0;
+				}
+				else  // night
+				{
+					cf->leaf_night_mr = t2 * t1 * pow(q10, exponent) * timeRes * 60 / 86400.0;
+				}
+
+			}			
+		}
 	}
 	else /* no leaves on */
 	{
@@ -228,6 +257,19 @@ epvar_struct* epv)
 		exponent = (metv->tsoil - 20.0) / 10.0;
 		t1 = pow(q10, exponent);
 		cf->livecroot_mr = ns->livecrootn * mrpern * t1 * t2;
+
+		// for high time MR
+		if (highT.active && mode == MODE_MODEL)
+		{
+			cf->livestem_mr = 0.0;
+			for (int i = 0; i < 24 * 60 / timeRes; ++i)
+			{
+				double temp = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
+				exponent = (temp - 20.0) / 10.0;
+				t1 = pow(q10, exponent);
+				cf->livestem_mr += ns->livestemn * mrpern * t1 * t2 * timeRes * 60 / 86400.0;				
+			}
+		}
 	}
 
 
