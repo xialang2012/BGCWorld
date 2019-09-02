@@ -285,7 +285,7 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *f
 
 
 //  for high time resolution
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
+int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS)//,FILE *fp_ci, int mode)
 {
 
@@ -312,7 +312,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflu
 	std::vector<float> PsnSun, PsnShade;
 	std::vector<std::vector<float>> highTimePsnA = { PsnSun, PsnShade };	// for hightime
 
-	if (ok && photosynthesisTimeRes(highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
+	if (ok && photosynthesisTimeRes(tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -343,7 +343,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflu
 	psn_shade->g = epv->gl_t_wv_shade * 1e6 / (1.6*R*(metv->tday + 273.15));
 	psn_shade->dlmr = epv->dlmr_area_shade;
 
-	if (ok && photosynthesisTimeRes(highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
+	if (ok && photosynthesisTimeRes(tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -383,7 +383,7 @@ int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflu
 }
 
 //  for high time resolution
-int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
 	const int yearS, const int daysS, const int sunorshade)//,int sun,FILE *fp_ci, int mode)
 {
@@ -453,15 +453,25 @@ int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_ti
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
 		double gl = calGl(&metvT, epc, &epvT, &wfT, 1, sunorshade);
 		canpoyET += wfT.canopyw_evap;
-		if (sunorshade == 1)
+		/*if (sunorshade == 1)
 			std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << gl << " " << metvT.dayl << " " <<
-			wfT.canopyw_evap << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;
+			wfT.canopyw_evap << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;*/
 
 		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
 
 		if (!photosynthesis(&psnT, &metvT))
-		{
+		{	
+			if (metvT.tday > 29 && metvT.swavgfd > 600)
+			{
+				if (tempCorrFactor.size() == 3)
+					 psnT.A = metvT.tday *tempCorrFactor[0] + metvT.swavgfd * tempCorrFactor[1] + tempCorrFactor[2];
+					//psnT.A = psnT.A*psnT.A *tempCorrFactor[0] + psnT.A * tempCorrFactor[1] - tempCorrFactor[2];
+				else if (tempCorrFactor.size() == 4)
+					psnT.A = metvT.tday*metvT.tday*metvT.tday*tempCorrFactor[0] + metvT.tday*metvT.tday *tempCorrFactor[1] + metvT.tday *  tempCorrFactor[2] + tempCorrFactor[3];
+			}
+
 			totalA += psnT.A;
+
 			++totalNum;
 			if (sunorshade == 1)
 				highTimePsnA[0].push_back(psnT.A);
@@ -702,6 +712,27 @@ int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int 
 	return ok;
 }
 
+// read temp corretion factor
+int readTempCorrFactor(std::vector<float> &tempCorrFactor, const char* dataFile)
+{
+	int ok = 1;
+	std::ifstream infile(dataFile);
+	if (infile.is_open()) {
+		std::string lineStr;
+		while (getline(infile, lineStr)) {
+			tempCorrFactor.push_back(std::stof(lineStr));
+		}
+	}
+
+	if (tempCorrFactor.size() == 0)
+	{
+		bgc_printf(BV_ERROR, "Error in open temp correction factor file for photosynthesis() from bgc()\n");
+		ok = 0;
+	}
+
+	return ok;
+}
+
 // read high time resolution data 
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS)
 {
@@ -798,6 +829,8 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 	highTM->output_carbon = false;
 	highTM->output_old_cpool = false;
 
+	highTM->tempCorr = false;
+
 	for (size_t i = 1; i < argc; i++)
 	{
 		if (std::string(argv[i]) == "-outOldC")
@@ -812,6 +845,24 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 		{
 			highTM->output_stress = true;
 		}
+
+		// high temp correction
+		if (std::string(argv[i]) == "-tc")
+		{
+			if (i + 1 >= argc)
+			{
+				inStationFile = "wrong";
+				std::cout << "please provide the high resoltion station file;" << std::endl;
+			}
+			else
+			{
+				inStationFile = std::string(argv[i + 1]);
+				highTM->tempCorr = true;
+				highTM->tempCorrFile = (char *)malloc((inStationFile.length() + 1) * sizeof(char));
+				strcpy(highTM->tempCorrFile, inStationFile.c_str());
+			}
+		}
+
 		// high time resolution
 		if (std::string(argv[i]) == "-h")
 		{

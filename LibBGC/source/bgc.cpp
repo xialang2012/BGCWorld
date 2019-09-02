@@ -419,6 +419,11 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	if (bgcin->hModel.active)
 		if (!readStationFluxData(sfData, bgcin->hModel.stationFile, tmpyears)) return 1;
 
+	// read high temp correction file
+	std::vector<float> tempCorrFactor;
+	if (bgcin->hModel.tempCorr && bgcin->hModel.active)
+		if (!readTempCorrFactor(tempCorrFactor, bgcin->hModel.tempCorrFile)) return 1;
+
 	// read lai data
 	std::vector<float> laiData;
 	if (bgcin->laiM.active)
@@ -850,7 +855,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			// add for high time resolution
 			if (bgcin->hModel.active && mode == MODE_MODEL && cs.leafc && phen.remdays_curgrowth && metv.dayl)
 			{
-				total_photosynthesisTimeRes(&bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
+				total_photosynthesisTimeRes(tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
 			}
 

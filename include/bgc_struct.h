@@ -997,11 +997,15 @@ typedef struct
 	bool output_old_cpool;
 	bool active;		// main control of hightime
 	bool output_carbon;	// output hightime carbon
+	bool tempCorr; // high temp correction
 
 	char * stationFile;
 	std::ofstream tmpHighFile;
 	std::ofstream highFile_carbon;
 	std::ofstream highFile_stress;
+
+	char * tempCorrFile;
+	std::ofstream tempCorrStream;
 
 }high_time_resolution;
 

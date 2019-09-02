@@ -6,25 +6,3 @@
        123     0
     plotID  TsoilErr
        123     0
-    plotID  TsoilErr
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0
-    plotID  TsoilErr
-       123     0

@@ -1,0 +1,2 @@
+Area,xian,PlotID,dilei,species,lon,lat,elev,sand,clay,soildepth,climateID,leaf1998,stem1998,root1998,litrc1998,soil1998,total1998,leaf2012,stem2012,root2012,litrc2012,soil2012,total2012,frost
+0.1,1,123,200,10,91.0664,30.4979,4333,30,30,50,752002,0.42,0,1.503,0.395,91,91.9365,0.14325,0,0.54325,0.25,91,91.9365,0

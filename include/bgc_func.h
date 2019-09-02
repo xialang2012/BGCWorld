@@ -73,10 +73,10 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
-int photosynthesisTimeRes(std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
-int total_photosynthesisTimeRes(high_time_resolution* high_time_resolution, wflux_struct* wf,  std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
+int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor,  high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
 	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
 	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
 double simulationPar(const double inPar, const double timePer);
@@ -88,6 +88,7 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 
 // read station of flux data
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
+int readTempCorrFactor(std::vector<float> &tempCorrFactor, const char* dataFile);
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
 void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM);
