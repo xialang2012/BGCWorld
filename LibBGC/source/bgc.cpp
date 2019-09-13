@@ -816,7 +816,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
-				if (ok && canopy_et(&metv, &epc, &epv, &wf, 1))
+				if (ok && canopy_et(&metv, &epc, &epv, &wf, 0))
 				{
 					bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
 					ok=0;

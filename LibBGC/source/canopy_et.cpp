@@ -14,6 +14,9 @@ See copyright.txt for Copyright information
 int canopy_et(const metvar_struct* metv, const epconst_struct* epc, 
 epvar_struct* epv, wflux_struct* wf, int mode)
 {
+	// soli ET
+	baresoil_evap(metv, wf, &epv->dsr);
+
 	//FILE *fp_daodu;
 	int verbose = 0;
 
@@ -125,10 +128,12 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	/* apply all multipliers to the maximum stomatal conductance */
 	m_final_sun = m_ppfd_sun * m_psi * m_co2 * m_tmin * m_vpd;
 	if (m_final_sun < 0.00000001) m_final_sun = 0.00000001;
+
 	m_final_shade = m_ppfd_shade * m_psi * m_co2 * m_tmin * m_vpd;
 	if (m_final_shade < 0.00000001) m_final_shade = 0.00000001;
+
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
-	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;
+	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
 	
 	/*****************************************Êä³öµ¼¶È*******************************************/
 	//if(mode==2)
@@ -258,7 +263,9 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	wf->canopyw_evap = cwe;
 	wf->canopyw_to_soilw = canopy_w - cwe;
 	wf->soilw_trans = trans;
-	
+
+	if (mode == 1)std::cout << gl_t_wv_sun << std::endl;
+
 	/* assign leaf-level conductance to transpired water vapor, 
 	for use in calculating co2 conductance for farq_psn() */
 	epv->gl_t_wv_sun = gl_t_wv_sun;
