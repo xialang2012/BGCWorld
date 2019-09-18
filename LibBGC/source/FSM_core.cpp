@@ -794,6 +794,7 @@ int FSM_core(metvar_struct* metv,int metday,pmet_struct *pmetvar,soilpar_struct*
 	for(i = 0;i < N; i++)
 		fprintf(fp1,"%lf,",soil_sum[i].s_w);
 	fprintf(fp1,"\n");
-	*/	
+	*/
+	//std::cout << FSM_soilT << std::endl;
 	return(0);
 }//end function

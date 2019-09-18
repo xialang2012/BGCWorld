@@ -158,6 +158,7 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *f
 	tk = t + 273.15;
 	Rd = psn->dlmr;
 	
+	//std::cout << g << std::endl;
 	/* convert atmospheric CO2 from ppm --> Pa */
 	Ca = psn->co2 * psn->pa / 1e6;
 	

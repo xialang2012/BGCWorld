@@ -264,7 +264,7 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	wf->canopyw_to_soilw = canopy_w - cwe;
 	wf->soilw_trans = trans;
 
-	if (mode == 1)std::cout << gl_t_wv_sun << std::endl;
+	//if (mode == 1)std::cout << gl_t_wv_sun << std::endl;
 
 	/* assign leaf-level conductance to transpired water vapor, 
 	for use in calculating co2 conductance for farq_psn() */
