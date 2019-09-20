@@ -8,11 +8,11 @@ Biome-BGC version 4.2 (final release)
 See copyright.txt for Copyright information
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 */
-
+#include <math.h>
 #include "bgc.h"
 
 int canopy_et(const metvar_struct* metv, const epconst_struct* epc, 
-epvar_struct* epv, wflux_struct* wf, int mode)
+epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 {
 	// soli ET
 	baresoil_evap(metv, wf, &epv->dsr);
@@ -127,6 +127,12 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 
 	/* apply all multipliers to the maximum stomatal conductance */
 	m_final_sun = m_ppfd_sun * m_psi * m_co2 * m_tmin * m_vpd;
+
+	if (tday > 29 && mode == 1)
+	{		
+		m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
+	}
+
 	if (m_final_sun < 0.00000001) m_final_sun = 0.00000001;
 
 	m_final_shade = m_ppfd_shade * m_psi * m_co2 * m_tmin * m_vpd;
@@ -135,6 +141,8 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
 	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
 	
+	//if (mode == 1)std::cout << gl_s_sun << std::endl;
+
 	/*****************************************Êä³öµ¼¶È*******************************************/
 	//if(mode==2)
 		//fprintf(fp_daodu,"%lf%12.4f%\n",m_final_sun,m_final_shade);
@@ -263,8 +271,6 @@ epvar_struct* epv, wflux_struct* wf, int mode)
 	wf->canopyw_evap = cwe;
 	wf->canopyw_to_soilw = canopy_w - cwe;
 	wf->soilw_trans = trans;
-
-	//if (mode == 1)std::cout << gl_t_wv_sun << std::endl;
 
 	/* assign leaf-level conductance to transpired water vapor, 
 	for use in calculating co2 conductance for farq_psn() */

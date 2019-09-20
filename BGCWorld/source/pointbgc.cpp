@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
 	/* Process command line arguments */
 	opterr = 0;
-	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM, &bgcin.gsiM);
+	analysisComm(argc, argv, &bgcin.hModel, &bgcin.laiM, &bgcin.gsiM, &bgcin.pymcM);
 
 	while((c = getopt(argc, argv, (char*)"pVsl:v:ugmn:a")) != -1)
 	{

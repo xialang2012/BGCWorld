@@ -819,7 +819,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
-				if (ok && canopy_et(&metv, &epc, &epv, &wf, 0))
+				if (ok && canopy_et(&metv, &epc, &epv, &wf, 0, bgcin->pymcM))
 				{
 					bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
 					ok=0;
@@ -858,7 +858,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			// add for high time resolution
 			if (bgcin->hModel.active && mode == MODE_MODEL && cs.leafc && phen.remdays_curgrowth && metv.dayl)
 			{
-				total_photosynthesisTimeRes(tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
+				total_photosynthesisTimeRes(bgcin->pymcM, tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
 			}
 

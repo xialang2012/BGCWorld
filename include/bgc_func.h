@@ -62,7 +62,7 @@ int maint_resp(wstate_struct* ws,const siteconst_struct* sitec,const cstate_stru
 const epconst_struct* epc, const metvar_struct* metv, cflux_struct* cf,
 epvar_struct* epv, const high_time_resolution& high_time_resolution, std::vector<StationDataFlux*> &sfData, const int simyr, const int yday, int mode);
 int canopy_et(const metvar_struct* metv, const epconst_struct* epc, 
-epvar_struct* epv, wflux_struct* wf, int verbose);
+epvar_struct* epv, wflux_struct* wf, int verbose, const pymc& pymcM);
 int penmon(const pmet_struct* in, int out_flag,	double* et);
 int photosynthesis(psn_struct* psn, const metvar_struct* metv);
 int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade);
@@ -73,25 +73,26 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
-int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, 
 	const metvar_struct* metv, const int yearS, const int daysS, const int sunorshade);
-int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor,  high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
+int total_photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrFactor,  high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, cstate_struct* cs, const double albedo,
 	const metvar_struct* metv, const epconst_struct* epc, epvar_struct* epv,
 	cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS);
 double simulationPar(const double inPar, const double timePer);
 double simulationPar1(const double inPar);
 double calppfdT(cstate_struct* cs, const epconst_struct* epc,
 	metvar_struct* metv, epvar_struct* epv, double albedo, const int sunorshade);
-double calGl(const metvar_struct* metv, const epconst_struct* epc,
+double calGl(const pymc& pymcM, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, wflux_struct* wf, const int mode, const int sunorshade);
+double caldlmr(int timeRes, metvar_struct* metv, const epvar_struct* epv, const epconst_struct* epc, int sunorshade);
 
 // read station of flux data
 int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxStationDataFile, const int yearS);
 int readTempCorrFactor(std::vector<float> &tempCorrFactor, const char* dataFile);
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
-void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM);
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM, pymc * pymcM);
 
 int readLaiData(std::vector<float> &laiData, const char* laiDataFile, const int yearS=1);	// read lai data
 

@@ -76,6 +76,8 @@ int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc,
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
 		epv->plaishade * metv->dayl * 12.011e-9;
+
+	//std::cout << epv->dlmr_area_sun + epv->dlmr_area_shade << " hhh" <<std::endl;
 	return (!ok);
 }
 
@@ -284,161 +286,9 @@ int photosynthesis(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *f
  	return (!ok);
 }	
 
-int photosynthesis1(psn_struct* psn, const metvar_struct* metv)//,int sun,FILE *fp_ci, int mode)
-{
-	/*
-	The following variables are assumed to be defined in the psn struct
-	at the time of the function call:
-	c3         (flag) set to 1 for C3 model, 0 for C4 model
-	pa         (Pa) atmospheric pressure
-	co2        (ppm) atmospheric [CO2]
-	t          (deg C) air temperature
-	lnc        (kg Nleaf/m2) leaf N concentration, per unit projected LAI
-	flnr       (kg NRub/kg Nleaf) fraction of leaf N in Rubisco
-	ppfd       (umol photons/m2/s) PAR flux density, per unit projected LAI
-	g          (umol CO2/m2/s/Pa) leaf-scale conductance to CO2, proj area basis
-	dlmr       (umol CO2/m2/s) day leaf maint resp, on projected leaf area basis
-
-	The following variables in psn struct are defined upon function return:
-	Ci(Pa) intercellular [CO2]
-	Ca         (Pa) atmospheric [CO2]
-	O2         (Pa) atmospheric [O2]
-	gamma      (Pa) CO2 compensation point, in the absence of maint resp.
-	Kc         (Pa) MM constant for carboxylation
-	Ko         (Pa) MM constant for oxygenation
-	Vmax       (umol CO2/m2/s) max rate of carboxylation
-	Jmax       (umol electrons/m2/s) max rate electron transport
-	J          (umol RuBP/m2/s) rate of RuBP regeneration
-	Av         (umol CO2/m2/s) carboxylation limited assimilation
-	Aj         (umol CO2/m2/s) RuBP regen limited assimilation
-	A          (umol CO2/m2/s) final assimilation rate
-	*/
-
-	/* the weight proportion of Rubisco to its nitrogen content, fnr, is
-	calculated from the relative proportions of the basic amino acids
-	that make up the enzyme, as listed in the Handbook of Biochemistry,
-	Proteins, Vol III, p. 510, which references:
-	Kuehn and McFadden, Biochemistry, 8:2403, 1969 */
-	static double fnr = 7.16;   /* kg Rub/kg NRub */
-
-	static double Kc25 = 404.0;   /* (ubar) MM const carboxylase, 25 deg C */
-	static double q10Kc = 2.1;    /* (DIM) Q_10 for Kc */
-	static double Ko25 = 248.0;   /* (mbar) MM const oxygenase, 25 deg C */
-	static double q10Ko = 1.2;    /* (DIM) Q_10 for Ko */
-	static double act25 = 3.6;    /* (umol/mgRubisco/min) Rubisco activity */
-	static double q10act = 2.4;   /* (DIM) Q_10 for Rubisco activity */
-	static double pabs = 0.85;    /* (DIM) fPAR effectively absorbed by PSII */
-
-	/* local variables */
-	int ok = 1;
-	double t;      /* (deg C) temperature */
-	double tk;     /* (K) absolute temperature */
-	double Kc;     /* (Pa) MM constant for carboxylase reaction */
-	double Ko;     /* (Pa) MM constant for oxygenase reaction */
-	double act;    /* (umol CO2/kgRubisco/s) Rubisco activity */
-	double Jmax;   /* (umol/m2/s) max rate electron transport */
-	double ppe;    /* (mol/mol) photons absorbed by PSII per e- transported */
-	double Vmax, J, gamma, Ca, Rd, O2, g, adp = 1;
-	double a, b, c, det;
-	double Av, Aj, A;
-
-	/* begin by assigning local variables */
-	g = 0.0025016536654632578;		// psn->g;	// conductance to CO2
-
-	double ppfd = 60.944042249999995;	//PAR flux per unit sunlit leaf area
-
-	tk = 273.15 + 25;	//t + 273.15;
-	Rd = 0.175;		//psn->dlmr;  
-
-	// convert atmospheric CO2 from ppm --> Pa	Ca = psn->co2 * psn->pa / 1e6;	
-	Ca = 338.69999999999999 * 99867.950909471518 / 1e6;
-	/* set parameters for C3 vs C4 model */
-	ppe = 2.6;
-
-	// calculate atmospheric O2 in Pa, assumes 21% O2 by volume 0.21*psn->pa
-	O2 = 0.21 * 99867.950909471518;
-
-	/* correct kinetic constants for temperature, and do unit conversions */
-	Ko = Ko25 * pow(q10Ko, (t - 25.0) / 10.0);
-	Ko = Ko * 100.0;   /* mbar --> Pa */
-	if (t > 15.0)
-	{
-		Kc = Kc25 * pow(q10Kc, (t - 25.0) / 10.0);
-		act = act25 * pow(q10act, (t - 25.0) / 10.0);
-	}
-	else
-	{
-		Kc = Kc25 * pow(1.8*q10Kc, (t - 15.0) / 10.0) / q10Kc;
-		act = act25 * pow(1.8*q10act, (t - 15.0) / 10.0) / q10act;
-	}
-	Kc = Kc * 0.10;   /* ubar --> Pa */
-	act = act * 1e6 / 60.0;     /* umol/mg/min --> umol/kg/s */
-
-	/* calculate gamma (Pa), assumes Vomax/Vcmax = 0.21 */
-	gamma = 0.5 * 0.21 * Kc * O2 / Ko;
-
-	/* calculate Vmax from leaf nitrogen data and Rubisco activity */
-	/* kg Nleaf   kg NRub    kg Rub      umol            umol
-	   -------- X -------  X ------- X ---------   =   --------
-		  m2      kg Nleaf   kg NRub   kg RUB * s       m2 * s
-
-		 (lnc)  X  (flnr)  X  (fnr)  X   (act)     =    (Vmax)
-	*/
-
-	adp = 1.0;
-	Vmax = psn->lnc * psn->flnr * fnr * act * adp;
-
-	/* calculate Jmax = f(Vmax), reference:
-	Wullschleger, S.D., 1993.  Biochemical limitations to carbon assimilation
-		in C3 plants - A retrospective analysis of the A/Ci curves from
-		109 species. Journal of Experimental Botany, 44:907-920.
-	*/
-	Jmax = 2.1*Vmax;
-
-	/* calculate J = f(Jmax, ppfd), reference: de Pury and Farquhar 1997 Plant Cell and Env.*/
-	a = 0.7;
-	b = -Jmax - (ppfd * pabs / ppe);
-	c = Jmax * ppfd * pabs / ppe;
-	J = (-b - sqrt(b*b - 4.0*a*c)) / (2.0*a);
-
-	/* solve for Av and Aj using the quadratic equation, substitution for Ci
-	from A = g(Ca-Ci) into the equations from Farquhar and von Caemmerer:
-
-		   Vmax (Ci - gamma)
-	Av =  -------------------   -   Rd
-		  Ci + Kc (1 + O2/Ko)
-
-
-			 J (Ci - gamma)
-	Aj  =  -------------------  -   Rd
-		   4.5 Ci + 10.5 gamma
-	*/
-
-	/* quadratic solution for Av */
-	a = -1.0 / g;
-	b = Ca + (Vmax - Rd) / g + Kc * (1.0 + O2 / Ko);
-	c = Vmax * (gamma - Ca) + Rd * (Ca + Kc * (1.0 + O2 / Ko));
-	if ((det = b * b - 4.0*a*c) < 0.0)
-		std::cout << "wrong det" << std::endl;
-	Av = (-b + sqrt(det)) / (2.0*a);
-
-	/* quadratic solution for Aj */
-	a = -4.5 / g;
-	b = 4.5*Ca + 10.5*gamma + J / g - 4.5*Rd / g;
-	c = J * (gamma - Ca) + Rd * (4.5*Ca + 10.5*gamma);
-	if ((det = b * b - 4.0*a*c) < 0.0)
-		bgc_printf(BV_ERROR, "negative root error in psn routine\n");
-	Aj = (-b + sqrt(det)) / (2.0*a);
-
-	/* estimate A as the minimum of (Av,Aj) */
-	if (Av < Aj) A = Av;
-	else         A = Aj;
-	
-	return 1;
-}
 
 //  for high time resolution
-int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
+int total_photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrFactor, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, cstate_struct* cs, const double albedo, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, cflux_struct* cf, psn_struct *psn_sun, psn_struct *psn_shade, const int yearS, const int daysS)//,FILE *fp_ci, int mode)
 {
 
@@ -464,8 +314,7 @@ int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_t
 
 	std::vector<float> PsnSun, PsnShade;
 	std::vector<std::vector<float>> highTimePsnA = { PsnSun, PsnShade };	// for hightime
-
-	if (ok && photosynthesisTimeRes(tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
+	if (ok && photosynthesisTimeRes(pymcM, tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_sun, metv, yearS, daysS, 1))//,1,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -475,7 +324,7 @@ int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_t
 	bgc_printf(BV_DIAG, "\t\tdone sun psn\n");
 
 	epv->assim_sun = psn_sun->A;
-
+	epv->dlmr_area_sun = psn_sun->dlmr;
 	/* for the final flux assignment, the assimilation output
 		needs to have the maintenance respiration rate added, this
 		sum multiplied by the projected leaf area in the relevant canopy
@@ -496,7 +345,7 @@ int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_t
 	psn_shade->g = epv->gl_t_wv_shade * 1e6 / (1.6*R*(metv->tday + 273.15));
 	psn_shade->dlmr = epv->dlmr_area_shade;
 
-	if (ok && photosynthesisTimeRes(tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
+	if (ok && photosynthesisTimeRes(pymcM, tempCorrFactor, highTimePsnA, high_time_resolution, wf, sfData, epc, epv, cs, albedo, psn_shade, metv, yearS, daysS, 0))//,0,fp_ci,mode))
 	{
 		bgc_printf(BV_ERROR, "Error in photosynthesis() from bgc()\n");
 		ok = 0;
@@ -505,12 +354,15 @@ int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_t
 	bgc_printf(BV_DIAG, "\t\tdone shade_psn\n");
 
 	epv->assim_shade = psn_shade->A;
+	epv->dlmr_area_shade = psn_shade->dlmr;
 	/* for the final flux assignment, the assimilation output
 		needs to have the maintenance respiration rate added, this
 		sum multiplied by the projected leaf area in the relevant canopy
 		fraction, and this total converted from umol/m2/s -> kgC/m2/d */
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
 		epv->plaishade *  metv->dayl * 12.011e-9;
+
+	//std::cout << epv->dlmr_area_sun + epv->dlmr_area_shade  << " gggg"  << std::endl;
 
 	// output Carbon
 	if (high_time_resolution->output_carbon)
@@ -536,7 +388,7 @@ int total_photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, high_t
 }
 
 //  for high time resolution
-int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
+int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> &sfData, const epconst_struct* epc, epvar_struct* epv,
 	cstate_struct* cs, const double albedo, psn_struct *psn, const metvar_struct* metv, 
 	const int yearS, const int daysS, const int sunorshade)//,int sun,FILE *fp_ci, int mode)
 {
@@ -548,6 +400,7 @@ int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<
 
 	// total final assimilation rate
 	double totalA = 0;  // used for calculating temperature
+	double totalDLMR = 0;  // used for dlmr
 	double totalPhotoNum = 0;  // used for calculating carbon or rad limitation
 	double canpoyET = 0;
 
@@ -585,7 +438,6 @@ int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<
 
 		// update calculate ppfd 
 		psnT.ppfd = calppfdT(cs, epc, &metvT, &epvT, albedo, sunorshade);
-
 		/* for hightime stress output*/
 		if (psnT.ppfd <= 0 )
 		{
@@ -598,22 +450,27 @@ int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<
 				highTimePsnA[0].push_back(0);
 			else
 				highTimePsnA[1].push_back(0);
-			if (sunorshade == 1)
-				/*std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << 0 << " " << metvT.dayl << " " <<
+			//if (sunorshade == 1)
+				/*/*std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << 0 << " " << metvT.dayl << " " <<
 				0 << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;*/
-				std::cout << 0 << std::endl;
+				//std::cout << 0 << std::endl;
 			continue;
 		}
 		
+		// update dlmr
+		psnT.dlmr = caldlmr(timeRes, &metvT, &epvT, epc,sunorshade);
+		totalDLMR += psnT.dlmr;
+
 		// update calculate g
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
-		double gl = calGl(&metvT, epc, &epvT, &wfT, sunorshade, sunorshade);
+		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, sunorshade, sunorshade);
 		canpoyET += wfT.canopyw_evap;
 		/*if (sunorshade == 1)
 			std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << epvT.m_psi << " " << metvT.dayl << " " <<
 			epvT.gl_s_sun << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;*/
 
 		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
+		//std::cout << psnT.g << std::endl;
 
 		if (!photosynthesis(&psnT, &metvT))
 		{	
@@ -655,12 +512,35 @@ int photosynthesisTimeRes(const std::vector<float> &tempCorrFactor, std::vector<
 		high_time_resolution->highFile_stress << std::endl;
 
 	psn->A = totalA / totalNum;
+	psn->dlmr = totalDLMR / totalNum;
 	psn->t = meanT / (24 * 60 / timeRes);
 	psn->O2 = totalPhotoNum / totalNum;  // carbon limitation percent
 	wf->canopyw_evap = canpoyET;
 	return (!ok);
 }
 
+
+double caldlmr(int timeRes, metvar_struct* metv, const epvar_struct* epv, const epconst_struct* epc, int sunorshade)
+{
+	double mrpern = 0.218;
+	double q10 = 2.0;
+	
+	double n_area_sun = 1.0 / (epv->sun_proj_sla * epc->leaf_cn);
+	double n_area_shade = 1.0 / (epv->shade_proj_sla * epc->leaf_cn);
+
+	double exponent = (metv->tday - 20.0) / 10.0;
+	
+	double dlmr_area_sun = n_area_sun * mrpern * pow(q10, exponent);
+	double dlmr_area_shade = n_area_shade * mrpern * pow(q10, exponent);
+
+	dlmr_area_sun = dlmr_area_sun / (86400 * 12.011e-9);
+	dlmr_area_shade = dlmr_area_shade / (86400 * 12.011e-9);
+
+	if(sunorshade)
+		return dlmr_area_sun;
+	else
+		return dlmr_area_shade;
+}
 
 double simulationPar(const double inPar, const double timePer)
 {
@@ -733,7 +613,7 @@ double calppfdT(cstate_struct* cs, const epconst_struct* epc,
 	}
 }
 
-double calGl(const metvar_struct* metv, const epconst_struct* epc,
+double calGl(const pymc& pymcM, const metvar_struct* metv, const epconst_struct* epc,
 	epvar_struct* epv, wflux_struct* wf, const int mode, const int sunorshade)
 {
 	// update wf.prcp_to_canopyw
@@ -769,7 +649,7 @@ double calGl(const metvar_struct* metv, const epconst_struct* epc,
 	}
 
 	// cal ET
-	canopy_et(metv, epc, epv, wf, mode);
+	canopy_et(metv, epc, epv, wf, mode, pymcM);
 
 	if (sunorshade == 1)
 	{
@@ -972,7 +852,7 @@ void SplitString(const std::string& s, std::vector<std::string>& v, const std::s
 		v.push_back(s.substr(pos1));
 }
 
-void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM)
+void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai_model* laiM, gsi_model* gsiM, pymc * pymcM)
 {
 	//char * tmp = nullptr;
 	std::string inStationFile = "";
@@ -986,6 +866,7 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 	highTM->output_old_cpool = false;
 
 	highTM->tempCorr = false;
+	pymcM->activate = false;
 
 	for (size_t i = 1; i < argc; i++)
 	{
@@ -1000,6 +881,23 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 		if (std::string(argv[i]) == "-outStress")
 		{
 			highTM->output_stress = true;
+		}
+
+		// run pymc
+		if (std::string(argv[i]) == "-mc")
+		{
+			if (i + 2 >= argc) 
+			{
+				inStationFile = "wrong";
+				std::cout << "please provide the correct mcmc parameters;" << std::endl;
+			}
+			else
+			{
+				pymcM->activate = true;
+				pymcM->a = std::stod(argv[i + 1]);
+				pymcM->b = std::stod(argv[i + 2]);
+				i = i + 2;
+			}
 		}
 
 		// high temp correction

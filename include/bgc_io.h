@@ -38,6 +38,7 @@ typedef struct
 	high_time_resolution hModel;	// high time resolution
 	lai_model laiM;					// input lai
 	gsi_model gsiM;					// gsi model
+	pymc pymcM; // run mcmc
 
 } bgcin_struct;
 

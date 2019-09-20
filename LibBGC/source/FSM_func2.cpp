@@ -302,7 +302,7 @@ int sparameters(soilpar_struct* vspar)
 	vspar->psi_sat = -10 * pow(10,1.88-0.013*vspar->psandy)*0.001;                                /* (m)the saturated matric potential */
 	vspar->porosity = 0.489 - 0.00126 * vspar->psandy;                                              /* the saturated volumetric water content(porosity) */
 	vspar->CH_b = 2.91 + 0.159 * vspar->pclay;                                                     /* the Clap and Hornberger constant */    
-	//vspar->c_solids = 2500000;
+	//vspar->c_solids = 2300000;
 	vspar->k_solids = 1.0;
 	
 	//vspar->psi_sat = -(exp((1.54 - 0.0095*vspar->psandy + 0.0063* vspar->psilt)*log(10.0))*9.8e-5);
