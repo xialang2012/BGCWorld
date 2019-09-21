@@ -7,6 +7,7 @@ Biome-BGC version 4.2 (final release)
 See copyright.txt for Copyright information
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 */
+#include <sstream>
 #include "bgc.h"
 
 int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc, 
@@ -776,13 +777,20 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 	int ndays = 365 * yearS;
 	std::ifstream infile(fluxStationDataFile);
 	int i = 0;
+	std::string::size_type position=0;
 
-	if (infile.is_open()) {
-		std::string lineStr;
-		while (getline(infile, lineStr)) {
+	if (infile.is_open()) 
+	{
+		std::stringstream bufferFile;
+		bufferFile << infile.rdbuf();
+		std::string s = bufferFile.str();
+		//std::string flag = '\n';
+		while ((position = s.find_first_of('\n', position)) != std::string::npos)
+		{
+			//position=s.find_first_of(flag,position);  
 			
-			++i;
-			//if (i == 1)continue;			
+			std::string lineStr = s.substr(i, position-i);
+			//std::cout << "position  " << i << " : " << position << " " << lineStr << std::endl;
 
 			// remove blank
 			int index = 0;
@@ -821,6 +829,66 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 
 			ff->GPP = std::stold(resultStr[7]);
 			ff->NEE = std::stold(resultStr[8]);
+
+
+			sfData.push_back(ff);
+
+			
+			i = position;++position;
+		}
+
+		infile.close();
+	}
+	else
+	{
+		bgc_printf(BV_ERROR, "Error in open high resolution data for photosynthesis() from bgc()\n");
+		ok = 0;
+	}
+	/*
+	if (infile.is_open()) {
+		std::string lineStr;
+		while (getline(infile, lineStr)) {
+			
+			++i;
+			//if (i == 1)continue;			
+
+			// remove blank
+			int index = 0;
+			if (!lineStr.empty())
+			{
+				while ((index = lineStr.find(' ', index)) != std::string::npos) lineStr.erase(index, 1);
+			}
+			index = 0;
+			if (!lineStr.empty())
+			{
+				while ((index = lineStr.find('"', index)) != std::string::npos) lineStr.erase(index, 1);
+			}
+
+			std::vector<std::string> resultStr;
+			SplitString(lineStr, resultStr, ",");
+
+			StationDataFlux *ff = new StationDataFlux();
+			ff->YEAR = std::stoi(resultStr[0]);
+			ff->DAY = std::stoi(resultStr[1]);
+			ff->HRMIN = std::stoi(resultStr[2]);
+			//ff->Rd = std::stold(resultStr[3]);
+			//ff->GPP = std::stold(resultStr[4]);
+			//ff->NEE = std::stold(resultStr[5]);
+			//ff->TA = std::stold(resultStr[6]);
+			//ff->PREC = std::stold(resultStr[7]);
+			//ff->RH = std::stold(resultStr[8]);
+			//ff->VPD = std::stold(resultStr[9]);
+			//ff->Srad = std::stold(resultStr[10]);
+			//ff->SWC = std::stold(resultStr[11]);
+			//ff->PAR = std::stold(resultStr[12]);
+
+			ff->TA = std::stold(resultStr[3]);
+			ff->PREC = std::stold(resultStr[4]);
+			ff->VPD = std::stold(resultStr[5]);
+			ff->Srad = std::stold(resultStr[6]);
+
+			ff->GPP = std::stold(resultStr[7]);
+			ff->NEE = std::stold(resultStr[8]);
 			
 
 			sfData.push_back(ff);
@@ -831,7 +899,7 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 	{
 		bgc_printf(BV_ERROR, "Error in open high resolution data for photosynthesis() from bgc()\n");
 		ok = 0;
-	}
+	}*/
 
 	return ok;
 }
