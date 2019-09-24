@@ -81,7 +81,7 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	as gsmax changes. See Korner, 1995.
 	*/
 	/* photosynthetic photon flux density conductance control */
-	m_ppfd_sun = metv->ppfd_per_plaisun/(PPFD50 + metv->ppfd_per_plaisun);
+	m_ppfd_sun = metv->ppfd_per_plaisun / (PPFD50 + metv->ppfd_per_plaisun);
 	m_ppfd_shade = metv->ppfd_per_plaishade/(PPFD50 + metv->ppfd_per_plaishade);
 
 	/* soil-leaf water potential multiplier */
@@ -128,20 +128,26 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	/* apply all multipliers to the maximum stomatal conductance */
 	m_final_sun = m_ppfd_sun * m_psi * m_co2 * m_tmin * m_vpd;
 
-	if (tday > 29 && mode == 1)
-	{		
-		m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
-	}
+	//if (tday > 28 && mode == 1)
+	//{		
+		//m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
+	//}
+	//std::cout << pymcM.a << " " << pymcM.b << std::endl;
 
 	if (m_final_sun < 0.00000001) m_final_sun = 0.00000001;
 
 	m_final_shade = m_ppfd_shade * m_psi * m_co2 * m_tmin * m_vpd;
 	if (m_final_shade < 0.00000001) m_final_shade = 0.00000001;
 
+	if (pymcM.activate)
+	{
+		m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
+		m_final_shade = m_final_shade * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
+	}
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
 	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
 	
-	//if (mode == 1)std::cout << gl_s_sun << std::endl;
+	if (mode == 1)std::cout << gl_s_sun << std::endl;
 
 	/*****************************************Êä³öµ¼¶È*******************************************/
 	//if(mode==2)

@@ -819,7 +819,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
-				if (ok && canopy_et(&metv, &epc, &epv, &wf, 0, bgcin->pymcM))
+				if (ok && canopy_et(&metv, &epc, &epv, &wf, 1, bgcin->pymcM))
 				{
 					bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
 					ok=0;
@@ -860,8 +860,9 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			{
 				total_photosynthesisTimeRes(bgcin->pymcM, tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+				wf.canopyw_evap = wfT.canopyw_evap;
 			}
-
+			
 			if(cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)
 				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade, 
 				&epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);

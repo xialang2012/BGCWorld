@@ -451,10 +451,10 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 				highTimePsnA[0].push_back(0);
 			else
 				highTimePsnA[1].push_back(0);
-			//if (sunorshade == 1)
+			if (sunorshade == 1)
 				/*/*std::cout << yearS << " " << dayCurr << " " << dayCurr * 24 * 60 / timeRes + i << " " << 0 << " " << metvT.dayl << " " <<
 				0 << " " << sfData[dayCurr * 24 * 60 / timeRes + i]->VPD << std::endl;*/
-				//std::cout << 0 << std::endl;
+				std::cout << 0 << std::endl;
 			continue;
 		}
 		
