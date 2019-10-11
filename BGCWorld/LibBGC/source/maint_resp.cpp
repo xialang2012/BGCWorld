@@ -156,6 +156,9 @@ const int simyr, const int yday, int mode)
 	double n_area_sun, n_area_shade, dlmr_area_sun, dlmr_area_shade;
 	double t2 = 1.0,t3 = 1.0,w=1;
 	double soilw_vwc;
+
+	double leaf_day_mr = 0.0, leaf_night_mr = 0.0, livestem_mr = 0.0;
+
 	/************************
 	if(epc->evergreen)
 		t2 = 0.026 * sitec->lat - 0.375;
@@ -203,23 +206,25 @@ const int simyr, const int yday, int mode)
 		exponent = (metv->tnight - 20.0) / 10.0;
 		cf->leaf_night_mr =t2 * t1 * pow(q10, exponent) * (86400.0 - metv->dayl) / 86400.0;
 
-		// for high time MR
+		// for high time MR		
 		if (highT.active && mode == MODE_MODEL)
 		{
-			cf->leaf_day_mr = 0.0;
-			cf->leaf_night_mr = 0.0;
+			//cf->leaf_day_mr = 0.0;
+			//cf->leaf_night_mr = 0.0;
 			for (int i = 0; i < 24 * 60 / timeRes; ++i)
 			{
 				double temp= sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
 				exponent = (temp - 20.0) / 10.0;
 
 				if (sfData[dayCurr * 24 * 60 / timeRes + i]->Srad > 0)	// daytime
-				{					
-					cf->leaf_day_mr += t2 * t1 * pow(q10, exponent) * timeRes *60 / 86400.0;
+				{
+					//cf->leaf_day_mr += t2 * t1 * pow(q10, exponent) * timeRes *60 / 86400.0;
+					leaf_day_mr = t2 * t1 * pow(q10, exponent) * timeRes * 60 / 86400.0;
 				}
 				else  // night
 				{
-					cf->leaf_night_mr = t2 * t1 * pow(q10, exponent) * timeRes * 60 / 86400.0;
+					//cf->leaf_night_mr = t2 * t1 * pow(q10, exponent) * timeRes * 60 / 86400.0;
+					leaf_night_mr = t2 * t1 * pow(q10, exponent) * timeRes * 60 / 86400.0;
 				}
 
 			}			
@@ -258,18 +263,23 @@ const int simyr, const int yday, int mode)
 		t1 = pow(q10, exponent);
 		cf->livecroot_mr = ns->livecrootn * mrpern * t1 * t2;
 
-		// for high time MR
+		// for high time MR'
 		if (highT.active && mode == MODE_MODEL)
 		{
-			cf->livestem_mr = 0.0;
+			//cf->livestem_mr = 0.0;
 			for (int i = 0; i < 24 * 60 / timeRes; ++i)
 			{
 				double temp = sfData[dayCurr * 24 * 60 / timeRes + i]->TA;
 				exponent = (temp - 20.0) / 10.0;
 				t1 = pow(q10, exponent);
-				cf->livestem_mr += ns->livestemn * mrpern * t1 * t2 * timeRes * 60 / 86400.0;				
+				//cf->livestem_mr += ns->livestemn * mrpern * t1 * t2 * timeRes * 60 / 86400.0;
+				cf->livestem_mr += ns->livestemn * mrpern * t1 * t2 * timeRes * 60 / 86400.0;
 			}
 		}
+
+		std::cout << simyr << " " << yday << " " << cf->leaf_day_mr + cf->leaf_night_mr + cf->froot_mr +
+			cf->livestem_mr + cf->livecroot_mr << " " << leaf_day_mr + leaf_night_mr + cf->froot_mr +
+			livestem_mr + cf->livecroot_mr << std::endl;
 	}
 
 

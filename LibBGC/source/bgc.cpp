@@ -1305,12 +1305,8 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 						annmaxplai = 0.0;
 					}
 					
-					bgc_printf(BV_DIAG, "%d\t%d\tdone annavg output\n",simyr,yday);
-				
-					
-					
-				}
-				
+					bgc_printf(BV_DIAG, "%d\t%d\tdone annavg output\n",simyr,yday);	
+				}				
 			}
 			
 			if (mode == MODE_MODEL)

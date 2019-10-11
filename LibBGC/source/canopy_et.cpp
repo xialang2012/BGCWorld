@@ -147,7 +147,7 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
 	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
 	
-	if (mode == 1)std::cout << gl_s_sun << std::endl;
+	//if (mode == 1)std::cout << gl_s_sun << std::endl;
 
 	/*****************************************Êä³öµ¼¶È*******************************************/
 	//if(mode==2)
