@@ -789,11 +789,13 @@ int FSM_core(metvar_struct* metv,int metday,pmet_struct *pmetvar,soilpar_struct*
 	fprintf(fp1,"%d,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"
 		,metday,metv->tavg,metv->tsoil,FSM_soilT
 		,FSM_snowT,ws->snoww,FSM_snowW,FSM_water,FSM_ice,(FSM_water + FSM_ice),ws->soilw,epv->psi,FSM_psi,FSM_lrad_up,FSM_lrad_down,bgc_lrad_input);
-	for(i = 0;i < N; i++)
-		fprintf(fp1,"%lf,",soil_sum[i].s_t);
-	for(i = 0;i < N; i++)
-		fprintf(fp1,"%lf,",soil_sum[i].s_w);
-	fprintf(fp1,"\n");
-	*/	
+	*///for(i = 0;i < N; i++)
+		//fprintf(fp1,"%lf,",soil_sum[i].s_t);
+		//std::cout << soil_sum[i].s_t << std::endl;
+	//for(i = 0;i < N; i++)
+	//	fprintf(fp1,"%lf,",soil_sum[i].s_w);
+	//fprintf(fp1,"\n");
+	
+	//std::cout << FSM_soilT << std::endl;
 	return(0);
 }//end function

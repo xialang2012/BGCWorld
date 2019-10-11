@@ -308,6 +308,16 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 		GSI_calculation(&metarr, &sitec, &epc, &phenarr, &ctrl);
 	}
 
+	// read high temp correction file
+	std::vector<float> tempCorrFactor;
+	if (bgcin->hModel.tempCorr)
+		if (!readTempCorrFactor(tempCorrFactor, bgcin->hModel.tempCorrFile)) return 1;
+	if (bgcin->cinit.frost)
+	{
+		for (int i = 0; i < tempCorrFactor.size(); ++i)
+			metarr.tavg_ra[i] = tempCorrFactor[i];
+	}
+
 	/* determine phenological signals */
 	if (ok && prephenology(bgcin->gsiM, &ctrl, &epc, &sitec, &metarr, &phenarr))
 	{
@@ -418,11 +428,6 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	std::vector<StationDataFlux*> sfData;
 	if (bgcin->hModel.active)
 		if (!readStationFluxData(sfData, bgcin->hModel.stationFile, tmpyears)) return 1;
-
-	// read high temp correction file
-	std::vector<float> tempCorrFactor;
-	if (bgcin->hModel.tempCorr && bgcin->hModel.active)
-		if (!readTempCorrFactor(tempCorrFactor, bgcin->hModel.tempCorrFile)) return 1;
 
 	// read lai data
 	std::vector<float> laiData;
@@ -571,9 +576,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 				{
 					/* increasing CO2, constant Ndep */
 					daily_ndep = sitec.ndep/365.0;
-					daily_nfix = sitec.nfix/365.0;	
-					
-
+					daily_nfix = sitec.nfix/365.0;
 				}
 			}
 			if(bgcin->ndepctrl.varndep && mode == MODE_MODEL)
@@ -816,7 +819,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
-				if (ok && canopy_et(&metv, &epc, &epv, &wf, 0))
+				if (ok && canopy_et(&metv, &epc, &epv, &wf, 1, bgcin->pymcM))
 				{
 					bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
 					ok=0;
@@ -855,10 +858,11 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			// add for high time resolution
 			if (bgcin->hModel.active && mode == MODE_MODEL && cs.leafc && phen.remdays_curgrowth && metv.dayl)
 			{
-				total_photosynthesisTimeRes(tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
+				total_photosynthesisTimeRes(bgcin->pymcM, tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+				wf.canopyw_evap = wfT.canopyw_evap;
 			}
-
+			
 			if(cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)
 				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade, 
 				&epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
@@ -1301,12 +1305,8 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 						annmaxplai = 0.0;
 					}
 					
-					bgc_printf(BV_DIAG, "%d\t%d\tdone annavg output\n",simyr,yday);
-				
-					
-					
-				}
-				
+					bgc_printf(BV_DIAG, "%d\t%d\tdone annavg output\n",simyr,yday);	
+				}				
 			}
 			
 			if (mode == MODE_MODEL)
@@ -1815,8 +1815,8 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 	
 	/*Close files
 	if(bgcin->cinit.frost)
-		fclose(fp1);
-*/
+		fclose(fp1);*/
+
 
 	bgcin->hModel.tmpHighFile.close();
 	if (bgcin->hModel.active && mode != MODE_SPINUP)

@@ -1011,6 +1011,13 @@ typedef struct
 
 typedef struct
 {
+	bool activate;	// 
+	double a;
+	double b;
+}pymc;
+
+typedef struct
+{
 	bool active;
 	char * laiFile;
 }
