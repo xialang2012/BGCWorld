@@ -9,3 +9,5 @@ b. MCMC training
 c. LAI module
 
 d. Freezing module
+
+e. GSI module
