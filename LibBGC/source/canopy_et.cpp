@@ -128,10 +128,6 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	/* apply all multipliers to the maximum stomatal conductance */
 	m_final_sun = m_ppfd_sun * m_psi * m_co2 * m_tmin * m_vpd;
 
-	//if (tday > 28 && mode == 1)
-	//{		
-		//m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
-	//}
 	//std::cout << pymcM.a << " " << pymcM.b << std::endl;
 
 	if (m_final_sun < 0.00000001) m_final_sun = 0.00000001;
@@ -144,10 +140,13 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 		m_final_sun = m_final_sun * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
 		m_final_shade = m_final_shade * (1 / (1 + exp(pymcM.a*tday - pymcM.b)));
 	}
+
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
 	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
 	
-	//if (mode == 1)std::cout << gl_s_sun << std::endl;
+	//if (mode == 2)
+	//	std::cout << m_final_sun << "," << m_ppfd_sun << ", " << m_psi << ", " << m_vpd << ", " << vpd << ", " << tday << std::endl;
+
 
 	/*****************************************Êä³öµ¼¶È*******************************************/
 	//if(mode==2)
@@ -278,7 +277,11 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	wf->canopyw_to_soilw = canopy_w - cwe;
 	wf->soilw_trans = trans;
 
-	/* assign leaf-level conductance to transpired water vapor, 
+	/*if (wf->canopyw_evap > 0.001)
+	{
+		std::cout << wf->canopyw_evap << std::endl;
+	}*/
+	/* assign leaf-level conductance to transpired water vapor,
 	for use in calculating co2 conductance for farq_psn() */
 	epv->gl_t_wv_sun = gl_t_wv_sun;
 	epv->gl_t_wv_shade = gl_t_wv_shade;

@@ -816,15 +816,32 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			displayed, since there may be intercepted water on the 
 			canopy that needs to be dealt with */
 			wflux_struct wfT = wf;
+			if (yday >= 197)
+			{
+				int i = 0;
+			}
 			if (ok && cs.leafc && metv.dayl)
 			{
 				/* conductance and evapo-transpiration */
-				if (ok && canopy_et(&metv, &epc, &epv, &wf, 1, bgcin->pymcM))
+				if (mode == MODE_MODEL)
 				{
-					bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
-					ok=0;
+					if (ok && canopy_et(&metv, &epc, &epv, &wf, 1, bgcin->pymcM))
+					{
+						bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
+						ok = 0;
+					}
 				}
-				
+				else
+				{
+					if (ok && canopy_et(&metv, &epc, &epv, &wf, 0, bgcin->pymcM))
+					{
+						bgc_printf(BV_ERROR, "Error in canopy_et() from bgc()\n");
+						ok = 0;
+					}
+				}
+
+				//std::cout << wf.canopyw_evap << ", " << wf.soilw_trans << std::endl;
+
 				bgc_printf(BV_DIAG, "%d\t%d\tdone canopy_et\n",simyr,yday);
 
 			}
@@ -860,7 +877,12 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			{
 				total_photosynthesisTimeRes(bgcin->pymcM, tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+				/*if (wfT.canopyw_evap > 0)
+				{
+					std::cout << "" << std::endl;
+				}*/
 				wf.canopyw_evap = wfT.canopyw_evap;
+				wf.soilw_trans = wfT.soilw_trans;
 			}
 			
 			if(cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)

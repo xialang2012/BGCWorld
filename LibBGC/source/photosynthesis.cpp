@@ -78,6 +78,8 @@ int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc,
 	cf->psnshade_to_cpool = (epv->assim_shade + epv->dlmr_area_shade) *
 		epv->plaishade * metv->dayl * 12.011e-9;
 
+	//std::cout << psn_sun->g << ", " << psn_shade->g << std::endl;
+
 	//std::cout << epv->dlmr_area_sun + epv->dlmr_area_shade << " hhh" <<std::endl;
 	return (!ok);
 }
@@ -364,6 +366,8 @@ int total_photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tem
 		epv->plaishade *  metv->dayl * 12.011e-9;
 
 	//std::cout << epv->dlmr_area_sun + epv->dlmr_area_shade  << " gggg"  << std::endl;
+	//std::cout << psn_sun->g << ", " << psn_shade->g  << std::endl;
+	//std::cout << wf->canopyw_evap << ", " << wf->soilw_trans << std::endl;
 
 	// output Carbon
 	if (high_time_resolution->output_carbon)
@@ -373,7 +377,8 @@ int total_photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tem
 		{
 			if (highTimePsnA[0][i] == 0)
 			{
-				high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << 0 << std::endl;
+				high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << 0 << 
+					", " << 0 << ", " << 0 << std::endl;
 				continue;
 			}
 			float cSun = (highTimePsnA[0][i] + epv->dlmr_area_sun) *
@@ -382,7 +387,8 @@ int total_photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tem
 			float cShade = (highTimePsnA[1][i] + epv->dlmr_area_shade) *
 				epv->plaishade * timeRes * 60 * 12.011e-9;
 
-			high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << cSun+ cShade << std::endl;
+			high_time_resolution->highFile_carbon << yearS + 1 << ", " << (daysS + 1) % 365 << ", " << i + 1 << ", " << cSun+ cShade <<
+				", " << highTimePsnA[0][i] << ", " << highTimePsnA[1][i] << std::endl;
 		}
 	}
 	return (!ok);
@@ -400,7 +406,7 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 	int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;	// time resolution
 
 	// total final assimilation rate
-	double totalA = 0, totalPpfd = 0.0, totalDLMR = 0, totalPhotoNum = 0, totalGl = 0, canpoyE = 0, canpoyT = 0;
+	double totalA = 0, totalPpfd = 0.0, totalDLMR = 0, totalPhotoNum = 0, totalGl = 0, canpoyE = 0, canpoyT = 0, totalSwab = 0;
 
 	int totalNum = 0;
 	for (int i = 0; i < 24 * 60/ timeRes; ++i)
@@ -450,7 +456,7 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 			else
 				highTimePsnA[1].push_back(0);
 			//if (sunorshade == 1)
-				//std::cout << 0 << std::endl;
+			//	std::cout << ", "  << ", " << ", " << ", " << ", " << std::endl;
 			continue;
 		}
 		
@@ -460,12 +466,14 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 
 		// update calculate g
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
-		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, sunorshade, sunorshade);
+		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, 2, sunorshade);
 		canpoyE += wfT.canopyw_evap;
 		canpoyT += wfT.soilw_trans;
+		totalSwab += metvT.swabs;
 
 		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
 		totalGl += psnT.g;
+
 		//std::cout << psnT.g << std::endl;
 
 		if (!photosynthesis(&psnT, &metvT))
@@ -483,12 +491,12 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 
 			++totalNum;
 			if (sunorshade == 1)
-				highTimePsnA[0].push_back(psnT.A);
+				highTimePsnA[0].push_back(psnT.g);
 			else
-				highTimePsnA[1].push_back(psnT.A);
+				highTimePsnA[1].push_back(psnT.g);
 			// for carbon
 			//if (sunorshade == 1 && high_time_resolution->output_carbon)
-			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.A << std::endl;
+			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.g << std::endl;
 		}
 
 		/* for hightime stress output*/
@@ -513,12 +521,15 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 	psn->ppfd = totalPpfd / totalNum;
 	psn->t = meanT / (24 * 60 / timeRes);
 	psn->O2 = totalPhotoNum / totalNum;  // carbon limitation percent
-	//wf->canopyw_evap = canpoyET;
+	wf->canopyw_evap = canpoyE;
+	wf->soilw_trans = canpoyT;
 
-	if (sunorshade == 1)
+	//std::cout << totalSwab << std::endl;
+
+	/*if (sunorshade == 1)
 		std::cout << psn->A << " " << psn->g << " " << psn->ppfd << " " << psn->dlmr << " " << canpoyE << " " << canpoyT;
 	else
-		std::cout << " " << psn->A << " " << psn->g << " " << psn->ppfd << " " << psn->dlmr << " " << canpoyE << " " << canpoyT << std::endl;
+		std::cout << " " << psn->A << " " << psn->g << " " << psn->ppfd << " " << psn->dlmr << " " << canpoyE << " " << canpoyT << std::endl;/**/
 	return (!ok);
 }
 
@@ -597,11 +608,11 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 		psn_sun->A = psn_sunT->A;
 		psn_shade->A = psn_shadeT->A;
 
-		psn_sun->g = psn_sunT->g;
+		/*psn_sun->g = psn_sunT->g;
 		psn_sun->ppfd = psn_sunT->ppfd;
 
 		psn_shade->g = psn_shadeT->g;
-		psn_shade->ppfd = psn_shadeT->ppfd;
+		psn_shade->ppfd = psn_shadeT->ppfd;*/
 
 	}
 
@@ -659,7 +670,16 @@ double calGl(const pymc& pymcM, const metvar_struct* metv, const epconst_struct*
 	}
 
 	// cal ET
-	canopy_et(metv, epc, epv, wf, mode, pymcM);
+	int modelF = 1;
+	if (mode == 2 && sunorshade == 1)
+	{
+		modelF = 2;
+	}
+	else
+	{
+		modelF = 1;
+	}
+	canopy_et(metv, epc, epv, wf, modelF, pymcM);
 
 	if (sunorshade == 1)
 	{
