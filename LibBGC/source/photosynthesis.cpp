@@ -491,9 +491,9 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 
 			++totalNum;
 			if (sunorshade == 1)
-				highTimePsnA[0].push_back(psnT.g);
+				highTimePsnA[0].push_back(psnT.A);
 			else
-				highTimePsnA[1].push_back(psnT.g);
+				highTimePsnA[1].push_back(psnT.A);
 			// for carbon
 			//if (sunorshade == 1 && high_time_resolution->output_carbon)
 			//	high_time_resolution->highFile_carbon << yearS+1 << ", " << (dayCurr+1) % 365 << ", " << i+1 << ", " << psnT.g << std::endl;
@@ -856,8 +856,8 @@ int readStationFluxData(std::vector<StationDataFlux*> &sfData, const char* fluxS
 			ff->VPD = std::stold(resultStr[5]);
 			ff->Srad = std::stold(resultStr[6]);
 
-			ff->GPP = std::stold(resultStr[7]);
-			ff->NEE = std::stold(resultStr[8]);
+			//ff->GPP = std::stold(resultStr[7]);
+			//ff->NEE = std::stold(resultStr[8]);
 
 
 			sfData.push_back(ff);
@@ -1039,7 +1039,6 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 			{
 				inStationFile = "wrong";
 				std::cout << "please provide the lai file;" << std::endl;
-				//return tmp;
 			}
 			else
 			{
