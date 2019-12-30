@@ -406,7 +406,7 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 	int timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;	// time resolution
 
 	// total final assimilation rate
-	double totalA = 0, totalPpfd = 0.0, totalDLMR = 0, totalPhotoNum = 0, totalGl = 0, canpoyE = 0, canpoyT = 0, totalSwab = 0;
+	double totalA = 0, totalPpfd = 0.0, totalDLMR = 0, totalPhotoNum = 0, totalGl = 0, canpoyW = 0, canpoyE = 0, canpoyT = 0, totalSwab = 0;
 
 	int totalNum = 0;
 	for (int i = 0; i < 24 * 60/ timeRes; ++i)
@@ -440,7 +440,24 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 		metvT.swavgfd = sfData[dayCurr* 24 * 60 / timeRes + i]->Srad;
 		metvT.par = metvT.swavgfd * RAD2PAR;
 
-		// update calculate ppfd 
+		// update calculate g  et
+		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
+		if (sunorshade == 1)
+			epvT.plaishade = 0;
+		else
+			epvT.plaisun = 0;
+		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, 2, sunorshade);
+		canpoyE += wfT.canopyw_evap;
+		canpoyT += wfT.soilw_trans;
+		canpoyW += wfT.prcp_to_canopyw / 2;
+		totalSwab += metvT.swabs;
+		if (metvT.swabs > 0.0)
+		{
+			psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
+			totalGl += psnT.g;
+		}
+
+		// update calculate ppfd
 		psnT.ppfd = calppfdT(cs, epc, &metvT, &epvT, albedo, sunorshade);
 		totalPpfd += psnT.ppfd;
 		/* for hightime stress output*/
@@ -459,23 +476,12 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 			//	std::cout << ", "  << ", " << ", " << ", " << ", " << std::endl;
 			continue;
 		}
-		
+
 		// update dlmr
 		psnT.dlmr = caldlmr(timeRes, &metvT, &epvT, epc,sunorshade);
 		totalDLMR += psnT.dlmr;
 
-		// update calculate g
-		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
-		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, 2, sunorshade);
-		canpoyE += wfT.canopyw_evap;
-		canpoyT += wfT.soilw_trans;
-		totalSwab += metvT.swabs;
-
-		psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
-		totalGl += psnT.g;
-
 		//std::cout << psnT.g << std::endl;
-
 		if (!photosynthesis(&psnT, &metvT))
 		{	
 			/*if (metvT.tday > 29 && metvT.swavgfd > 600)
@@ -523,6 +529,7 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 	psn->O2 = totalPhotoNum / totalNum;  // carbon limitation percent
 	wf->canopyw_evap = canpoyE;
 	wf->soilw_trans = canpoyT;
+	wf->prcp_to_canopyw = canpoyW;
 
 	//std::cout << totalSwab << std::endl;
 
@@ -574,7 +581,7 @@ double simulationPar1(const double inPar)
 }
 
 void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, epvar_struct*epv, cflux_struct*cf, psn_struct*psn_sun, psn_struct*psn_shade,
-	const epvar_struct*epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT, const int yearS, const int daysS)
+	const epvar_struct*epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT, const wflux_struct* wfT, wflux_struct* wf, const int yearS, const int daysS)
 {
 	// write to disk
 	high_time_resolution->tmpHighFile << yearS << ", " << daysS << ", " << psn_sun->t << ", " << psn_sunT->t << ", " << 
@@ -603,16 +610,25 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 	if (high_time_resolution->active && high_time_resolution->output_old_cpool == false)
 	{
-		cf->psnsun_to_cpool = cfT->psnsun_to_cpool;
+		/**/cf->psnsun_to_cpool = cfT->psnsun_to_cpool;
 		cf->psnshade_to_cpool = cfT->psnshade_to_cpool;
+
 		psn_sun->A = psn_sunT->A;
 		psn_shade->A = psn_shadeT->A;
 
-		/*psn_sun->g = psn_sunT->g;
-		psn_sun->ppfd = psn_sunT->ppfd;
+		psn_sun->dlmr = psn_sunT->dlmr;
+		psn_shade->dlmr = psn_shadeT->dlmr;
 
+		psn_sun->g = psn_sunT->g;
 		psn_shade->g = psn_shadeT->g;
-		psn_shade->ppfd = psn_shadeT->ppfd;*/
+		
+		psn_sun->ppfd = psn_sunT->ppfd;
+		psn_shade->ppfd = psn_shadeT->ppfd;
+		
+		wf->canopyw_evap = wfT->canopyw_evap;
+		wf->soilw_trans = wfT->soilw_trans;
+		wf->prcp_to_canopyw = wfT->prcp_to_canopyw;
+		/**/
 
 	}
 

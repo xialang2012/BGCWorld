@@ -127,6 +127,10 @@ const epconst_struct* epc, const metvar_struct* metv, cflux_struct* cf,
 epvar_struct* epv, const high_time_resolution& highT, std::vector<StationDataFlux*> &sfData, 
 const int simyr, const int yday, int mode)
 {
+	// for comparison between the daily and hourly, 
+	// 不需要使用小时数据计算替换天呼吸为false，默认为true，计算高时间分辨率模型时必须为true
+	bool comPasison = true;
+
 	/*
 	maintenance respiration routine
 	Uses reference values at 20 deg C and an empirical relationship between
@@ -168,7 +172,9 @@ const int simyr, const int yday, int mode)
 	}*/
 	int timeRes = 0;
 	int dayCurr = 0;
-	if(highT.active)
+
+	
+	if(comPasison && highT.active)
 	{
 		dayCurr = simyr * 365 + yday;
 		timeRes = sfData[1]->HRMIN - sfData[0]->HRMIN;
@@ -204,7 +210,7 @@ const int simyr, const int yday, int mode)
 		cf->leaf_night_mr =t2 * t1 * pow(q10, exponent) * (86400.0 - metv->dayl) / 86400.0;
 
 		// for high time MR
-		if (highT.active && mode == MODE_MODEL)
+		if (comPasison && highT.active && mode == MODE_MODEL)
 		{
 			cf->leaf_day_mr = 0.0;
 			cf->leaf_night_mr = 0.0;
@@ -259,7 +265,7 @@ const int simyr, const int yday, int mode)
 		cf->livecroot_mr = ns->livecrootn * mrpern * t1 * t2;
 
 		// for high time MR
-		if (highT.active && mode == MODE_MODEL)
+		if (comPasison && highT.active && mode == MODE_MODEL)
 		{
 			cf->livestem_mr = 0.0;
 			for (int i = 0; i < 24 * 60 / timeRes; ++i)

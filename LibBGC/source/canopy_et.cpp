@@ -142,7 +142,7 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	}
 
 	gl_s_sun = epc->gl_smax * m_final_sun * gcorr;
-	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;	
+	gl_s_shade = epc->gl_smax * m_final_shade * gcorr;
 	
 	//if (mode == 2)
 	//	std::cout << m_final_sun << "," << m_ppfd_sun << ", " << m_psi << ", " << m_vpd << ", " << vpd << ", " << tday << std::endl;
@@ -193,8 +193,8 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 		/* assign appropriate resistance and radiation for pmet_in */
 		pmet_in.rv = 1.0/gc_e_wv;
 		pmet_in.rh = 1.0/gc_sh;
-		pmet_in.irad = metv->swabs;
-		
+		pmet_in.irad = metv->swabs;	
+
 		/* call penman-monteith function, returns e in kg/m2/s */
 		if (penmon(&pmet_in, 0, &e))
 		{
@@ -204,9 +204,13 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 		
 		/* calculate the time required to evaporate all the canopy water */
 		e_dayl = canopy_w/e;
-		
+			if (mode == 2)
+			{
+				int i = 0;
+			}		
 		if (e_dayl > dayl)  
 		{
+
 			/* day not long enough to evap. all int. water */
 			trans = 0.0;    /* no time left for transpiration */
 			cwe = e * dayl;   /* daylength limits canopy evaporation */

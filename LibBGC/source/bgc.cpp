@@ -863,7 +863,7 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 					ok=0;
 				}
 				
-			} /* end of photosynthesis calculations */
+			}  /*end of photosynthesis calculations */
 			else
 			{
 				epv.assim_sun = epv.assim_shade = 0.0;
@@ -873,21 +873,16 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 			psn_struct psn_sunT = psn_sun;
 			psn_struct psn_shadeT = psn_shade;
 			// add for high time resolution
+			
 			if (bgcin->hModel.active && mode == MODE_MODEL && cs.leafc && phen.remdays_curgrowth && metv.dayl)
 			{
 				total_photosynthesisTimeRes(bgcin->pymcM, tempCorrFactor, &bgcin->hModel, &wfT, sfData, &cs, sitec.sw_alb, &metv,
 					&epc, &epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
-				/*if (wfT.canopyw_evap > 0)
-				{
-					std::cout << "" << std::endl;
-				}*/
-				wf.canopyw_evap = wfT.canopyw_evap;
-				wf.soilw_trans = wfT.soilw_trans;
 			}
 			
-			if(cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)
-				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade, 
-				&epvT, &cfT, &psn_sunT, &psn_shadeT, simyr, yday);
+			if (cs.leafc && phen.remdays_curgrowth && metv.dayl && mode == MODE_MODEL)
+				replacePhotosynthesisResults(&bgcin->hModel, &epv, &cf, &psn_sun, &psn_shade,
+					&epvT, &cfT, &psn_sunT, &psn_shadeT, &wfT, &wf, simyr, yday);
 			//end
 
 			if (mode == MODE_MODEL)

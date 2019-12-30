@@ -69,8 +69,7 @@ int total_photosynthesis(const metvar_struct* metv, const epconst_struct* epc, e
 
 // add fucntions for the simulation of high time resolution
 void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, epvar_struct*epv, cflux_struct*cf, psn_struct*psn_sun, psn_struct*psn_shade,
-	const epvar_struct* epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT, const int yearS, const int daysS);
-
+	const epvar_struct* epvT, const cflux_struct*cfT, const psn_struct*psn_sunT, const psn_struct*psn_shadeT, const wflux_struct* wfT, wflux_struct* wf, const int yearS, const int daysS);
 //int photosynthesisCoreTimeRes(psn_struct *psn, const metvar_struct* metv, double tT,
 //	double ppfdT, double* totalA, int *totalNum);
 int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrFactor, std::vector<std::vector<float>> &highTimePsnA, high_time_resolution* high_time_resolution, wflux_struct* wf, std::vector<StationDataFlux*> & sfData, const epconst_struct* epc, epvar_struct* epv,
