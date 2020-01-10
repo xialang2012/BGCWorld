@@ -885,6 +885,22 @@ int bgc(bgcin_struct* bgcin, bgcout_struct* bgcout, int mode)
 					&epvT, &cfT, &psn_sunT, &psn_shadeT, &wfT, &wf, simyr, yday);
 			//end
 
+			/*epv.dlmr_area_sun = epvT.dlmr_area_sun;
+			epv.dlmr_area_shade = epvT.dlmr_area_shade;
+			if (ok && cs.leafc && phen.remdays_curgrowth && metv.dayl)
+			{
+				if (ok && total_photosynthesis(&metv, &epc, &epv, &cf, &psn_sun, &psn_shade))//,fp_gs,mode))
+				{
+					bgc_printf(BV_ERROR, "Error in total_photosynthesis() from bgc()\n");
+					ok = 0;
+				}
+
+			}
+			else
+			{
+				epv.assim_sun = epv.assim_shade = 0.0;
+			}*//**/
+
 			if (mode == MODE_MODEL)
 			{
 				/* nitrogen deposition and fixation */

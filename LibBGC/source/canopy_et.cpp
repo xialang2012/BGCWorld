@@ -52,7 +52,7 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 	psi_close = epc->psi_close;
 	vpd_open =  epc->vpd_open;
 	vpd_close = epc->vpd_close;
-
+	
 	/* temperature and pressure correction factor for conductances */
 	gcorr = pow((metv->tday+273.15)/293.15, 1.75) * 101300/metv->pa;
 	
@@ -204,13 +204,9 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 		
 		/* calculate the time required to evaporate all the canopy water */
 		e_dayl = canopy_w/e;
-			if (mode == 2)
-			{
-				int i = 0;
-			}		
+		
 		if (e_dayl > dayl)  
 		{
-
 			/* day not long enough to evap. all int. water */
 			trans = 0.0;    /* no time left for transpiration */
 			cwe = e * dayl;   /* daylength limits canopy evaporation */
@@ -274,7 +270,10 @@ epvar_struct* epv, wflux_struct* wf, int mode, const pymc& pymcM)
 		trans_shade = t * dayl * epv->plaishade;
 		trans = trans_sun + trans_shade;
 	}
-		
+	
+	if (metv->swabs_per_plaisun == 0)  // make sure no trans at night
+		trans = 0;
+
 	/* assign water fluxes, all excess not evaporated goes
 	to soil water compartment */
 	wf->canopyw_evap = cwe;

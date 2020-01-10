@@ -20,6 +20,8 @@ int epc_init(file epcfile, epconst_struct* epc, siteconst_struct* sitec)
 	char key2[] = "ECOPHYS";
 	char keyword[80];
 
+	epc->d0 = 1;
+
 	/********************************************************************
 	**                                                                 **
 	** Begin reading initialization file block starting with keyword:  **

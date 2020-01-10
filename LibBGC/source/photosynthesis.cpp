@@ -7,6 +7,7 @@ Biome-BGC version 4.2 (final release)
 See copyright.txt for Copyright information
 *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 */
+#include <math.h>
 #include <sstream>
 #include "bgc.h"
 
@@ -433,34 +434,41 @@ int photosynthesisTimeRes(const pymc& pymcM, const std::vector<float> &tempCorrF
 		metvT.tavg = psnT.t;/**/
 		metvT.prcp = sfData[dayCurr * 24 * 60 / timeRes + i]->PREC;
 		metvT.dayl = timeRes * 60;
-
 		meanT += metvT.tday;
 
 		// update par and swavgfd
 		metvT.swavgfd = sfData[dayCurr* 24 * 60 / timeRes + i]->Srad;
 		metvT.par = metvT.swavgfd * RAD2PAR;
-
-		// update calculate g  et
+		//if(metvT.par == 0)
+		//	metvT.ppfd_per_plaishade = 0, metvT.ppfd_per_plaisun = 0, metvT.swabs_per_plaishade = 0, metvT.swabs_per_plaisun = 0;
 		metvT.vpd = sfData[dayCurr * 24 * 60 / timeRes + i]->VPD;
-		if (sunorshade == 1)
-			epvT.plaishade = 0;
-		else
-			epvT.plaisun = 0;
-		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, 2, sunorshade);
-		canpoyE += wfT.canopyw_evap;
-		canpoyT += wfT.soilw_trans;
-		canpoyW += wfT.prcp_to_canopyw / 2;
 		totalSwab += metvT.swabs;
-		if (metvT.swabs > 0.0)
-		{
-			psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
-			totalGl += psnT.g;
-		}
 
 		// update calculate ppfd
 		psnT.ppfd = calppfdT(cs, epc, &metvT, &epvT, albedo, sunorshade);
 		totalPpfd += psnT.ppfd;
-		/* for hightime stress output*/
+		
+		// update calculate g  et
+		/*if (sunorshade == 1)
+			epvT.plaishade = 0;
+		else
+			epvT.plaisun = 0;*/
+		double gl = calGl(pymcM, &metvT, epc, &epvT, &wfT, 2, sunorshade);
+		canpoyE += wfT.canopyw_evap;
+		canpoyT += wfT.soilw_trans;
+		canpoyW += wfT.prcp_to_canopyw;
+		if (metvT.swavgfd > 0.0)
+		{
+			psnT.g = gl * 1e6 / (1.6*R*(psnT.t + 273.15));
+			totalGl += psnT.g;
+		}
+		/*if (wfT.prcp_to_canopyw > 30)
+		{
+			int i = 0;
+		}
+		std::cout << dayCurr << " " << metvT.prcp << " " << wfT.prcp_to_canopyw << std::endl;*/
+
+		/* check && hightime stress output*/
 		if (psnT.ppfd <= 0 )
 		{
 			// for stress
@@ -610,28 +618,21 @@ void replacePhotosynthesisResults(high_time_resolution* high_time_resolution, ep
 
 	if (high_time_resolution->active && high_time_resolution->output_old_cpool == false)
 	{
-		/**/cf->psnsun_to_cpool = cfT->psnsun_to_cpool;
+		cf->psnsun_to_cpool = cfT->psnsun_to_cpool;
 		cf->psnshade_to_cpool = cfT->psnshade_to_cpool;
-
 		psn_sun->A = psn_sunT->A;
 		psn_shade->A = psn_shadeT->A;
-
 		psn_sun->dlmr = psn_sunT->dlmr;
 		psn_shade->dlmr = psn_shadeT->dlmr;
-
 		psn_sun->g = psn_sunT->g;
-		psn_shade->g = psn_shadeT->g;
-		
+		psn_shade->g = psn_shadeT->g;		
 		psn_sun->ppfd = psn_sunT->ppfd;
 		psn_shade->ppfd = psn_shadeT->ppfd;
 		
 		wf->canopyw_evap = wfT->canopyw_evap;
 		wf->soilw_trans = wfT->soilw_trans;
-		wf->prcp_to_canopyw = wfT->prcp_to_canopyw;
-		/**/
-
+		wf->prcp_to_canopyw = wfT->prcp_to_canopyw;/**/
 	}
-
 }
 
 
@@ -664,6 +665,9 @@ double calGl(const pymc& pymcM, const metvar_struct* metv, const epconst_struct*
 	(kg intercepted/kg rain/unit all-sided LAI/day) */
 	max_int = epc->int_coef * prcp * epv->all_lai;
 
+	//new method to calculate interception
+	max_int = calInterception(metv, epc, epv);
+
 	/* rain vs. snow, and canopy interception */
 	if (metv->tavg > 0.0)             /* rain */
 	{
@@ -683,6 +687,7 @@ double calGl(const pymc& pymcM, const metvar_struct* metv, const epconst_struct*
 	else                              /* snow */
 	{
 		wf->prcp_to_snoww = prcp;     /* no interception */
+		wf->prcp_to_canopyw = 0;     /* no interception */
 	}
 
 	// cal ET
@@ -1084,4 +1089,45 @@ void analysisComm(const int argc, char **argv, high_time_resolution* highTM, lai
 		}
 
 	}
+}
+
+double calInterception(const metvar_struct* metv, const epconst_struct* epc,
+	epvar_struct* epv)
+{
+	pmet_struct pmet_in;
+	//double rain = 106.05, eMean = 0.45, rainMean = 1.84, t = 1800;
+	double Cm = 1.5, b = 0, rh = 17, rv = 14, e = 0, I = 0;
+
+	double t = metv->dayl;
+	double rain = metv->prcp;
+	double lai = epv->proj_lai;
+	double irad = metv->lrad, ta = metv->tday, vpd = metv->vpd, p = metv->pa;
+
+	// cal e from climate data
+	pmet_in.ta = metv->tday;
+	pmet_in.pa = metv->pa;
+	pmet_in.vpd = metv->vpd;
+
+	double gcorr = pow((metv->tday + 273.15) / 293.15, 1.75) * 101300 / p;
+	double gl = epc->gl_bl * gcorr;
+	double gc_e_wv =gl * lai;
+	double gc_sh = gc_e_wv;
+
+	pmet_in.rv = 1.0 / gc_e_wv;
+	pmet_in.rh = 1.0 / gc_sh;
+	pmet_in.irad = metv->swabs;
+
+	/* call penman-monteith function, returns e in kg/m2/s */
+	if (penmon(&pmet_in, 0, &e))
+		std::cout << "Error: penmon() for canopy evap... \n" << std::endl;
+
+	// cal b from lai
+	b = 1- (1-exp(-lai *epc->ext_coef));
+
+	// cal interception
+	double C0 = Cm*(1 - epc->d0 * exp(-(1 - b)*rain / Cm));
+	double D = 1 - C0 / Cm;
+	I = Cm*(epc->d0 - D) + (1 - D) * e * t;
+	return I;
+	//print(D, e*t, etI, canpoyStorageI + etI, I);
 }

@@ -823,6 +823,7 @@ typedef struct
 	int n_moving_avg;				/* moving average (calculated from indicatiors to avoid the effects of single extreme events)*/
 	double GSI_limit_SGS;			/* when GSI first time greater that limit -> start of growing season */
 	double GSI_limit_EGS;			/* when GSI first time less that limit -> end of growing season */
+	double d0; /* used for record canpoy dryness index */
 	/* end for gsi */
 
 } epconst_struct;
